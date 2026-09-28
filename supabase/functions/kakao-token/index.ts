@@ -35,7 +35,12 @@ Deno.serve(async (req) => {
       }),
     });
     const t = await r.json();
-    if (!r.ok || !t.id_token) return json({ error: t.error ?? 'token_failed', detail: t.error_description }, 400);
+    if (!r.ok || !t.id_token) {
+      // OpenID Connect가 꺼져 있으면 성공해도 id_token 이 없어요
+      const code = t.error_code ?? (r.ok ? 'NO_ID_TOKEN' : 'TOKEN_FAILED');
+      console.log('kakao token error', code, t.error_description ?? '');
+      return json({ error: t.error ?? 'token_failed', code, detail: t.error_description }, 400);
+    }
     return json({ id_token: t.id_token });   // access/refresh 토큰은 돌려주지 않아요
   } catch (_e) {
     return json({ error: 'server_error' }, 500);

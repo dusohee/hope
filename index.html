@@ -670,7 +670,11 @@ async function finishKakao(){
   if(err) throw new Error('kakao_'+err);
   if(!saved || saved.st!==u.searchParams.get('state')) throw new Error('kakao_state');
   const { data, error } = await state.sb.functions.invoke('kakao-token',{ body:{ code, redirect_uri:redirectUri() } });
-  if(error || !data?.id_token) throw error || new Error('kakao_token');
+  if(error || !data?.id_token){
+    let code='';   // 카카오 오류 코드(KOE…)를 화면에 보여줘서 원인을 찾기 쉽게
+    try{ code=(await error?.context?.json())?.code || ''; }catch{}
+    throw new Error('kakao_token '+code);
+  }
   const { error:e2 } = await state.sb.auth.signInWithIdToken({ provider:'kakao', token:data.id_token, nonce:saved.nonce });
   if(e2) throw e2;
 }
@@ -689,7 +693,10 @@ async function initReal(){
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){
     show('login');
-    if(loginErr) toast(String(loginErr.message).includes('access_denied')?'로그인을 취소했어요':'카카오 로그인에 실패했어요. 다시 시도해 주세요');
+    if(loginErr){
+      const m=String(loginErr.message||loginErr), code=(m.match(/KOE\d+|NO_ID_TOKEN|TOKEN_FAILED/)||[''])[0];
+      toast(m.includes('access_denied')?'로그인을 취소했어요':'카카오 로그인에 실패했어요'+(code?' ('+code+')':'')+'. 다시 시도해 주세요');
+    }
     return;
   }
   await afterAuth(session.user);
