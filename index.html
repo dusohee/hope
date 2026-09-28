@@ -325,10 +325,36 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
 .sheet button:active{background:rgba(255,255,255,.06)}
 .sheet .danger{color:#ff9aa8}
 
+/* ---------- 촛불 켜기 확인 모달 ---------- */
+.modal-wrap{
+  position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(2,2,10,.7);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  animation:fadeIn .2s ease;
+}
+.modal{
+  width:100%;max-width:340px;padding:30px 22px 20px;border-radius:20px;text-align:center;
+  background:linear-gradient(180deg,#1b1934,#12112a);border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 40px rgba(255,190,230,.08);
+  animation:popIn .25s cubic-bezier(.3,1.4,.5,1);
+}
+.modal .m-flame{
+  width:18px;height:27px;margin:0 auto 18px;
+  filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 14px #ffb1cf);
+}
+.modal .m-flame svg{display:block;width:100%;height:100%}
+.modal .m-sub{font-size:12.5px;color:#f2b27a;letter-spacing:.04em;margin-bottom:8px}
+.modal h3{font-family:var(--serif);font-size:20px;font-weight:700;line-height:1.5;letter-spacing:-.02em;word-break:keep-all}
+.modal .m-btns{display:flex;gap:8px;margin-top:26px}
+.modal .m-btns button{flex:1;height:50px;border-radius:12px;font-size:16px;font-weight:700}
+.modal .m-no{background:rgba(255,255,255,.08);color:#d7d3ee}
+.modal .m-yes{background:linear-gradient(90deg,#ffe9a8,#ffc2e0 55%,#c9b8ff);color:#1a1030}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes popIn{from{opacity:0;transform:scale(.92)}}
+
 .loading{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:var(--night);font-family:var(--serif);color:var(--mute);text-align:center;line-height:1.8;padding:0 28px}
 
 @media (prefers-reduced-motion:reduce){
-  .flame svg,.cell.next .candle,.cell.igniting .halo,.finale.next .cluster{animation:none}
+  .flame svg,.cell.next .candle,.cell.igniting .halo,.finale.next .cluster,.modal-wrap,.modal{animation:none}
   *{transition-duration:.01ms!important}
 }
 </style>
@@ -393,6 +419,18 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="modal-wrap" id="confirm" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="m-flame"></div>
+      <p class="m-sub" id="confirmSub" hidden>마지막 100번째 촛불이에요</p>
+      <h3 id="confirmTitle">오늘 진짜로<br>새벽예배에 참여하셨나요?</h3>
+      <div class="m-btns">
+        <button class="m-no" id="confirmNo">아니오</button>
+        <button class="m-yes" id="confirmYes">예</button>
+      </div>
+    </div>
+  </div>
 
   <div class="sheet-wrap" id="sheet" hidden>
     <div class="sheet">
@@ -856,7 +894,29 @@ $('#nickInput').addEventListener('keydown',e=>{ if(e.key==='Enter' && !$('#nickS
 $('#codeInput').addEventListener('keydown',e=>{ if(e.key==='Enter' && !$('#nickSubmit').disabled) submitNick(); });
 $('#nickSubmit').addEventListener('click',submitNick);
 $('#nickCancel').addEventListener('click',()=>show('main'));
-$('#grid').addEventListener('click',e=>{ const b=e.target.closest('.light-btn'); if(b && !b.disabled) lightCandle(b); });
+// 실수로 누르지 않도록 한 번 더 확인
+function askConfirm(isLast){
+  return new Promise(resolve=>{
+    const wrap=$('#confirm'), prev=document.activeElement;
+    $('#confirmSub').hidden=!isLast;
+    wrap.hidden=false; $('#confirmNo').focus();
+    const done=ok=>{
+      wrap.hidden=true; wrap.onclick=null; $('#confirmYes').onclick=null; $('#confirmNo').onclick=null;
+      document.removeEventListener('keydown',onKey); prev?.focus?.(); resolve(ok);
+    };
+    const onKey=e=>{ if(e.key==='Escape') done(false); };
+    document.addEventListener('keydown',onKey);
+    $('#confirmYes').onclick=()=>done(true);
+    $('#confirmNo').onclick=()=>done(false);
+    wrap.onclick=e=>{ if(e.target===wrap) done(false); };
+  });
+}
+$('#confirm .m-flame').innerHTML=FLAME;
+
+$('#grid').addEventListener('click',async e=>{
+  const b=e.target.closest('.light-btn'); if(!b || b.disabled || !$('#confirm').hidden) return;
+  if(await askConfirm(Number(b.dataset.slot)===GOAL)) lightCandle(b);
+});
 
 $('#menuBtn').addEventListener('click',()=>{ $('#sheetWho').textContent=`${state.me?.nickname||''}님으로 로그인 중`; $('#sheet').hidden=false; });
 $('#closeSheet').addEventListener('click',()=>$('#sheet').hidden=true);
