@@ -2,7 +2,7 @@
 // Client Secret 이 브라우저에 노출되지 않도록 서버(Supabase Edge Function)에서만 처리해요.
 // 필요한 시크릿: KAKAO_REST_KEY, KAKAO_CLIENT_SECRET
 
-const ALLOWED = ['https://dusohee.github.io', 'http://localhost:3000'];
+const ALLOWED = ['https://pray100.vercel.app', 'https://dusohee.github.io', 'http://localhost:3000'];
 
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin') ?? '';
