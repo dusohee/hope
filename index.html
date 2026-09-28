@@ -301,7 +301,10 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
   background:linear-gradient(90deg,rgba(255,176,32,.16),rgba(255,95,176,.16),rgba(107,92,231,.16));
   border:1px solid rgba(255,255,255,.14);
 }
-.demo-bar{font-size:11.5px;color:#1a1030;background:#ffe9a8;text-align:center;padding:6px 12px}
+.demo-bar{font-size:11.5px;color:#1a1030;background:#ffe9a8;text-align:center;padding:6px 12px;display:flex;align-items:center;justify-content:center;gap:10px}
+.demo-bar button{padding:3px 10px;border-radius:999px;background:#1a1030;color:#ffe9a8;font-size:11.5px;font-weight:700}
+.tour{display:block;width:100%;margin-top:10px;height:46px;font-size:14.5px;color:#c9c4e6;border-radius:12px}
+.tour:active{background:rgba(255,255,255,.06)}
 
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:rgba(255,255,255,.12);border-bottom:3px solid rgba(255,255,255,.12)}
 .foot{padding:28px 20px 40px;text-align:center;font-family:var(--serif);font-size:13.5px;color:#5c5a75;line-height:1.8}
@@ -379,6 +382,7 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 3C6.48 3 2 6.54 2 10.9c0 2.8 1.86 5.26 4.66 6.66l-.95 3.5c-.08.3.26.54.52.37l4.15-2.75c.53.07 1.07.11 1.62.11 5.52 0 10-3.54 10-7.9S17.52 3 12 3z"/></svg>
       카카오로 시작하기
     </button>
+    <button class="tour" id="tourBtn" hidden>로그인 없이 둘러보기</button>
     <p class="demo-note" id="demoNote" hidden>지금은 데모 모드예요. 서버를 연결하면 실제 카카오 로그인과 가족 동기화가 켜져요.</p>
   </section>
 
@@ -401,7 +405,7 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
 
   <!-- 메인 -->
   <section id="main" hidden>
-    <div class="demo-bar" id="demoBar" hidden>데모 모드 · 하루 한 번 제한 없이 눌러볼 수 있어요</div>
+    <div class="demo-bar" id="demoBar" hidden><span id="demoBarText">데모 모드 · 하루 한 번 제한 없이 눌러볼 수 있어요</span><button id="tourExit" hidden>나가기</button></div>
     <header class="head">
       <div class="head-row">
         <h1>100번 새벽기도</h1>
@@ -457,7 +461,8 @@ const CONFIG = {
 };
 
 // 설정값이 있는데 라이브러리만 못 불러온 경우엔 데모로 빠지지 않고 에러를 보여줘요
-const DEMO = !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY;
+let DEMO = !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY;
+let TOUR = false;   // 실서비스에서 "로그인 없이 둘러보기" 중인지 (데모와 같은 방식, 이 기기에만 저장)
 const GOAL = CONFIG.GOAL;
 
 /* 참고 이미지의 9가지 그라데이션 */
@@ -730,6 +735,7 @@ async function finishKakao(){
   if(e2) throw e2;
 }
 async function initReal(){
+  $('#tourBtn').hidden=false;   // 가족이 아닌 사람도 로그인 없이 체험할 수 있게
   if(!window.supabase) throw new Error('supabase_lib');
   const sb = state.sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { auth:{ detectSessionInUrl:false } });
   sb.auth.onAuthStateChange((ev)=>{
@@ -808,8 +814,10 @@ async function realLight(){
    데모 모드 (이 기기의 브라우저에만 저장)
    ========================================================= */
 const DEMO_KEY='hope-100-demo-v1';
-function demoRead(){ try{ return JSON.parse(localStorage.getItem(DEMO_KEY)||'null'); }catch{ return null; } }
-function demoWrite(){ try{ localStorage.setItem(DEMO_KEY, JSON.stringify({me:state.me,profiles:state.profiles,prayers:state.prayers})); }catch{} }
+const TOUR_KEY='hope-100-tour-v1';
+const demoKey=()=>TOUR?TOUR_KEY:DEMO_KEY;
+function demoRead(){ try{ return JSON.parse(localStorage.getItem(demoKey())||'null'); }catch{ return null; } }
+function demoWrite(){ try{ localStorage.setItem(demoKey(), JSON.stringify({me:state.me,profiles:state.profiles,prayers:state.prayers})); }catch{} }
 function demoSeed(){
   const fam=[['u-mom','엄마'],['u-dad','아빠'],['u-bro','오빠'],['u-sis','언니'],['u-grand','할머니']];
   const profiles={}; fam.forEach(([id,nickname])=>profiles[id]={id,nickname});
@@ -831,6 +839,30 @@ function demoLight(){
   const row={id:'d'+Date.now(),slot:state.prayers.length+1,user_id:state.me.id,prayed_on:todayKST()};
   setTimeout(demoWrite,0);
   return row;
+}
+
+/* ---------- 둘러보기 (실서비스에서 로그인 없이 체험) ---------- */
+function startTour(){
+  DEMO=true; TOUR=true;
+  const d=demoRead()||demoSeed();
+  state.profiles=d.profiles; state.prayers=d.prayers;
+  state.me=d.me||{id:'u-me',nickname:'나'};
+  state.profiles[state.me.id]={id:state.me.id,nickname:state.me.nickname};
+  demoWrite();
+  $('#demoBarText').textContent='둘러보기 중 · 여기서 켠 촛불은 이 기기에만 남아요';
+  $('#demoBar').hidden=false; $('#tourExit').hidden=false;
+  $('#fillDemoBtn').hidden=false; $('#resetDemoBtn').hidden=false;
+  $('#logoutBtn').textContent='둘러보기 끝내기';
+  enterMain();
+}
+function endTour(){
+  DEMO=false; TOUR=false;
+  state.me=null; state.profiles={}; state.prayers=[];
+  $('#demoBar').hidden=true; $('#tourExit').hidden=true;
+  $('#fillDemoBtn').hidden=true; $('#resetDemoBtn').hidden=true;
+  $('#logoutBtn').textContent='로그아웃';
+  document.body.classList.remove('daylight'); lastCount=null;
+  window.scrollTo(0,0); show('login');
 }
 
 /* ---------- 화면 전환 ---------- */
@@ -918,12 +950,13 @@ $('#grid').addEventListener('click',async e=>{
   if(await askConfirm(Number(b.dataset.slot)===GOAL)) lightCandle(b);
 });
 
-$('#menuBtn').addEventListener('click',()=>{ $('#sheetWho').textContent=`${state.me?.nickname||''}님으로 로그인 중`; $('#sheet').hidden=false; });
+$('#menuBtn').addEventListener('click',()=>{ $('#sheetWho').textContent=TOUR?'둘러보기 중이에요 (예시 기록)':`${state.me?.nickname||''}님으로 로그인 중`; $('#sheet').hidden=false; });
 $('#closeSheet').addEventListener('click',()=>$('#sheet').hidden=true);
 $('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet') $('#sheet').hidden=true; });
 $('#renameBtn').addEventListener('click',()=>{ $('#sheet').hidden=true; openNick('edit'); });
 $('#logoutBtn').addEventListener('click',async ()=>{
   $('#sheet').hidden=true;
+  if(TOUR) return endTour();
   if(DEMO){ state.me=null; demoWrite(); show('login'); }
   else await state.sb.auth.signOut();
 });
@@ -938,10 +971,15 @@ $('#fillDemoBtn').addEventListener('click',()=>{
   demoWrite(); render(); requestAnimationFrame(scrollToNext);
 });
 $('#resetDemoBtn').addEventListener('click',()=>{
-  try{ localStorage.removeItem(DEMO_KEY); }catch{}
-  $('#sheet').hidden=true; const d=demoSeed();
+  try{ localStorage.removeItem(demoKey()); }catch{}
+  $('#sheet').hidden=true;
+  if(TOUR){ state.me=null; return startTour(); }
+  const d=demoSeed();
   state.me=null; state.profiles=d.profiles; state.prayers=d.prayers; $('#nickInput').value=''; show('login');
 });
+
+$('#tourBtn').addEventListener('click',startTour);
+$('#tourExit').addEventListener('click',endTour);
 
 // 카카오톡 인앱 브라우저 → 기본 브라우저로 열기 안내
 if(/KAKAOTALK/i.test(navigator.userAgent)){
