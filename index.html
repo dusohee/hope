@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#04040d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="새벽기도">
+<title>100번 새벽기도</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --night:#04040d;
+  --ink:#f3f0ff;
+  --mute:#8d8aa8;
+  --line:rgba(255,255,255,.13);
+  --kakao:#FEE500;
+  --serif:"Gowun Batang","Nanum Myeongjo",serif;
+  --sans:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--night);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+/* 상태바(노치) 영역으로 스크롤된 촛불이 비치지 않게 */
+body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--night);z-index:15}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid #c9b8ff;outline-offset:2px}
+[hidden]{display:none!important}
+.app{max-width:520px;margin:0 auto;min-height:100%;position:relative}
+
+/* ---------- 밤하늘 ---------- */
+.sky{
+  background-color:#05050f;
+  background-image:
+    var(--stars),
+    radial-gradient(ellipse 70% 50% at 20% 30%,rgba(38,44,130,.35),transparent 70%),
+    radial-gradient(ellipse 60% 40% at 85% 70%,rgba(60,30,120,.28),transparent 70%);
+  background-size:260px 260px,100% 100%,100% 100%;
+}
+
+/* ---------- 촛불 ---------- */
+.cell{position:relative;background-position:var(--sx) var(--sy),0 0,0 0}
+.stage{position:relative;aspect-ratio:3/4;overflow:hidden}
+.candle{
+  position:absolute;left:50%;bottom:17%;width:40%;height:var(--h);
+  transform:translateX(-50%);opacity:.34;transition:opacity 1.2s ease;
+}
+.body{
+  position:absolute;inset:0;overflow:hidden;
+  border-radius:48% 48% 5px 5px / 9% 9% 3px 3px;
+  background:linear-gradient(180deg,#4a4a5c,#2a2a38 70%,#1f1f2b);
+}
+.color{position:absolute;inset:0;background:var(--g);opacity:0;transition:opacity 1.4s ease .15s}
+.color::before{ /* 녹은 촛농 웅덩이 */
+  content:"";position:absolute;left:6%;right:6%;top:1.5%;height:7%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 60%,rgba(255,255,255,.55),rgba(255,255,255,.1) 70%);
+}
+.body::after{ /* 종이 같은 결 */
+  content:"";position:absolute;inset:0;background-image:var(--grain);background-size:90px 90px;
+  mix-blend-mode:soft-light;opacity:.7;pointer-events:none;
+}
+.wick{position:absolute;left:50%;bottom:100%;width:2px;height:7px;margin-left:-1px;background:#6f6c80;border-radius:1px}
+.flame{
+  position:absolute;left:50%;bottom:calc(100% + 1px);width:22%;aspect-ratio:2/3;
+  transform:translateX(-50%) scale(0);transform-origin:50% 100%;opacity:0;
+  transition:opacity .4s ease,transform .5s cubic-bezier(.3,1.6,.5,1);
+}
+.flame svg{
+  display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 100%;
+  filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 10px var(--glow));
+  animation:flicker 2.6s ease-in-out infinite alternate;animation-delay:var(--fd);
+  animation-play-state:paused;   /* 화면에 보이는 칸만 흔들림 (.vis) */
+}
+.cell.vis .flame svg{animation-play-state:running}
+@keyframes flicker{
+  0%{transform:scale(1,1) rotate(0)}
+  30%{transform:scale(.95,1.07) rotate(-2deg)}
+  60%{transform:scale(1.03,.96) rotate(1.5deg)}
+  100%{transform:scale(.97,1.04) rotate(-1deg)}
+}
+.halo{
+  position:absolute;left:50%;bottom:calc(17% + var(--h));width:120%;aspect-ratio:1;
+  transform:translate(-50%,50%) scale(.4);opacity:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,200,230,.22),transparent 62%);
+  background:radial-gradient(circle,color-mix(in srgb,var(--glow) 32%,transparent),transparent 62%);
+  transition:opacity 1.2s ease,transform 1.2s ease;
+}
+.water{
+  position:absolute;left:50%;bottom:4%;width:88%;height:14%;transform:translateX(-50%);
+  background:repeating-linear-gradient(180deg,var(--wc,#55546b) 0 1.5px,transparent 1.5px 4.5px);
+  -webkit-mask:radial-gradient(ellipse 50% 100% at 50% 0,#000 35%,transparent 100%);
+  mask:radial-gradient(ellipse 50% 100% at 50% 0,#000 35%,transparent 100%);
+  opacity:.3;transition:opacity 1.2s ease;
+}
+
+.cell.lit .candle{opacity:1}
+.cell.lit .color{opacity:1}
+.cell.lit .wick{opacity:0}
+.cell.lit .flame{opacity:1;transform:translateX(-50%) scale(1)}
+.cell.lit .halo{opacity:1;transform:translate(-50%,50%) scale(1)}
+.cell.lit .water{--wc:var(--base);opacity:.85}
+
+.cell.next .candle{opacity:.6;animation:waiting 3.2s ease-in-out infinite}
+@keyframes waiting{50%{opacity:.8}}
+
+.cell.igniting .halo{animation:burst 1.4s ease-out}
+@keyframes burst{0%{transform:translate(-50%,50%) scale(.2);opacity:0}35%{transform:translate(-50%,50%) scale(1.5);opacity:1}100%{transform:translate(-50%,50%) scale(1);opacity:1}}
+
+.light-btn{
+  position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
+  display:none;white-space:nowrap;
+  padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700;letter-spacing:-.01em;
+  color:#1a1030;background:linear-gradient(180deg,#fff7d6,#ffd3ec);
+  box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 18px rgba(255,190,230,.55);
+}
+.light-btn:active{transform:translate(-50%,-50%) scale(.95)}
+.light-btn:disabled{background:rgba(255,255,255,.1);color:#bdb9d6;box-shadow:0 0 0 1px rgba(255,255,255,.18);font-weight:500}
+.cell.next .light-btn{display:block}
+
+.meta{
+  height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  background:rgba(5,5,15,.6);
+}
+.meta .date{font-size:12.5px;font-weight:700;letter-spacing:-.01em}
+.meta .who{font-size:11px;color:#c9c4e6;max-width:100%;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta .num{font-family:var(--serif);font-size:12px;color:#5c5a75}
+.cell.lit .num{display:none}
+.cell:not(.lit) .date,.cell:not(.lit) .who{display:none}
+.cell.mine .who::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:#ffd3ec;margin-right:4px;vertical-align:2px}
+
+/* ---------- 100번째 촛불: 3칸을 모두 쓰는 마지막 칸 ---------- */
+.finale{grid-column:1 / -1}
+.finale .stage{aspect-ratio:1/1.05;container-type:inline-size}
+.cluster{position:absolute;inset:0;opacity:.42;transition:opacity 1.2s ease}
+.finale.next .cluster{opacity:.6;animation:waiting 3.2s ease-in-out infinite}
+.finale.lit .cluster{opacity:1;animation:none}
+.fc{position:absolute;left:calc(var(--x) - var(--w) / 2);bottom:var(--b);width:var(--w);height:var(--h)}
+.fbody{
+  position:absolute;inset:0;overflow:hidden;border-radius:12% 12% 4px 4px / 5% 5% 2px 2px;
+  background:linear-gradient(180deg,#4a4a5c,#2a2a38 70%,#1f1f2b);
+}
+.fbody::after{content:"";position:absolute;inset:0;background-image:var(--grain);background-size:90px 90px;mix-blend-mode:soft-light;opacity:.7;pointer-events:none}
+.fbody .color::before{display:none}
+.fc .color{transition-delay:var(--d)}
+.cap{ /* 녹아 흘러내린 촛농 */
+  position:absolute;left:0;right:0;top:0;height:9%;opacity:0;
+  background:linear-gradient(180deg,#ffe48c,#ffc445);border-radius:0 0 45% 55% / 0 0 100% 100%;
+  transition:opacity 1s ease var(--d);
+}
+.drip{
+  position:absolute;top:3%;left:var(--dx);width:15%;height:var(--dl);opacity:0;
+  background:linear-gradient(180deg,#ffd766,#ffbe3d);border-radius:0 0 999px 999px;
+  transition:opacity 1s ease var(--d);
+}
+.fc .flame{width:26%;transition-delay:var(--d)}
+.orb{
+  position:absolute;left:50%;bottom:100%;width:118%;aspect-ratio:1;border-radius:50%;
+  transform:translate(-50%,32%) scale(.4);opacity:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 58%,rgba(255,236,200,.5),rgba(255,236,220,.2) 55%,rgba(255,255,255,.1) 69%,transparent 70%);
+  transition:opacity 1.2s ease var(--d),transform 1.4s ease var(--d);
+}
+.finale.lit .color,.finale.lit .cap{opacity:1}
+.finale.lit .drip{opacity:.95}
+.finale.lit .orb{opacity:1;transform:translate(-50%,32%) scale(1)}
+.finale-text{position:absolute;left:0;right:0;top:4%;z-index:2;text-align:center;pointer-events:none}
+.finale-text .big{
+  font-family:var(--serif);font-weight:700;line-height:1;letter-spacing:-.02em;
+  font-size:74px;font-size:19cqw;color:#3d3b55;transition:color 1.4s ease .6s,text-shadow 1.4s ease .6s;
+}
+.finale-text .verse,.finale-text .ref{opacity:0;transition:opacity 1.6s ease 1.6s}
+.finale-text .verse{
+  max-width:80%;margin:10px auto 0;font-family:var(--serif);font-size:14.5px;font-size:3.7cqw;line-height:1.6;
+  color:#f3ecff;text-shadow:0 1px 10px rgba(5,5,15,.8);word-break:keep-all;
+}
+.finale-text .ref{margin-top:6px;font-size:12px;font-size:3cqw;letter-spacing:.12em;color:#f2b27a}
+.finale.lit .big{color:#ffe2b8;text-shadow:0 0 18px rgba(255,190,120,.55),0 0 42px rgba(255,120,180,.35)}
+.finale.lit .verse,.finale.lit .ref{opacity:1}
+.finale .light-btn{top:44%;font-size:14px;padding:10px 18px}
+
+/* ---------- 100개 완성: 격자가 화창한 낮 하늘로 ---------- */
+.grid .cell::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  background-image:
+    var(--clouds),
+    radial-gradient(ellipse 80% 45% at 50% -8%,rgba(255,250,225,.7),transparent 70%),
+    linear-gradient(180deg,#3d9df0,#7cc6fb 50%,#d6f0ff);
+  background-size:320px 320px,100% 100%,100% 100%;
+  background-position:var(--sx) var(--sy),0 0,0 0;
+  transition:opacity 3.5s ease;
+}
+.grid .finale::before{
+  background-image:
+    var(--clouds),
+    radial-gradient(circle at 84% 11%,#fffdf0 0 4.5%,rgba(255,244,190,.85) 6.5%,rgba(255,240,190,.3) 16%,transparent 34%),
+    linear-gradient(180deg,#3d9df0,#7cc6fb 50%,#d6f0ff);
+}
+.grid .cell .stage,.grid .cell .meta{position:relative}
+.grid{transition:background 3.5s ease}
+.grid .meta{transition:background 3s ease}
+.daylight .grid{background:#dff1ff;border-bottom-color:#dff1ff}
+.daylight .grid .cell::before{opacity:1}
+.daylight .grid .meta{background:rgba(255,255,255,.55)}
+/* 글자색도 하늘과 함께 천천히 */
+.daylight .finale .big,.daylight .finale .verse,.daylight .finale .ref,.daylight .grid .meta .date,.daylight .grid .meta .who{
+  transition:color 3s ease,text-shadow 3s ease,opacity 1.6s ease 1.6s;
+}
+.daylight .grid .meta .date{color:#12305a}
+.daylight .grid .meta .who{color:#34507c}
+.daylight .finale .big{color:#fff;text-shadow:0 2px 16px rgba(20,90,170,.45),0 0 40px rgba(255,210,150,.6)}
+.daylight .finale .verse{color:#123562;text-shadow:0 0 12px rgba(255,255,255,.9)}
+.daylight .finale .ref{color:#c0551f}
+
+/* ---------- 로그인 / 닉네임 ---------- */
+.screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:0 28px 28px}
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:22px;padding-top:40px}
+.hero .cell{width:170px;background:none}
+.hero .stage{border-radius:0;overflow:visible}
+.hero .meta{display:none}
+h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.25;letter-spacing:-.02em}
+.sub{font-family:var(--serif);font-size:15.5px;line-height:1.7;color:#b7b2d4}
+.kakao{
+  width:100%;height:54px;border-radius:12px;background:var(--kakao);color:rgba(0,0,0,.85);
+  display:flex;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:500;
+}
+.kakao svg{width:20px;height:20px}
+.demo-note{margin-top:14px;text-align:center;font-size:12px;color:var(--mute);line-height:1.6}
+.inapp{
+  margin-bottom:14px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.6;text-align:center;
+  background:rgba(255,233,168,.1);border:1px solid rgba(255,233,168,.35);color:#ffe9a8;
+}
+.inapp button{display:block;margin:8px auto 0;padding:6px 14px;border-radius:999px;background:#ffe9a8;color:#1a1030;font-size:13px;font-weight:700}
+
+.form{flex:1;display:flex;flex-direction:column;padding-top:18vh;gap:14px}
+.form h2{font-family:var(--serif);font-size:26px;line-height:1.4;font-weight:700;margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--mute);margin-bottom:8px}
+.field input{
+  width:100%;height:54px;border-radius:12px;padding:0 16px;font:inherit;font-size:17px;color:var(--ink);
+  background:rgba(255,255,255,.06);border:1px solid var(--line);
+}
+.field input::placeholder{color:#5d5a78}
+.primary{
+  height:54px;border-radius:12px;font-size:16px;font-weight:700;margin-top:auto;
+  background:linear-gradient(90deg,#ffe9a8,#ffc2e0 55%,#c9b8ff);color:#1a1030;
+}
+.primary:disabled{opacity:.35}
+.ghost{height:44px;font-size:14px;color:var(--mute)}
+
+/* ---------- 메인 ---------- */
+.head{
+  position:sticky;z-index:5;padding:14px 18px 14px;
+  top:env(safe-area-inset-top,0px);
+  background:linear-gradient(180deg,rgba(4,4,13,.97) 70%,rgba(4,4,13,.85));
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.head-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.head h1{font-family:var(--serif);font-size:20px;font-weight:700;letter-spacing:-.02em}
+.tally{font-family:var(--serif);font-size:15px;color:var(--mute);white-space:nowrap}
+.tally b{font-size:26px;color:var(--ink);font-weight:700;margin-right:2px}
+.menu-btn{width:36px;height:36px;margin:-8px -8px -8px 0;border-radius:50%;font-size:20px;line-height:1;color:var(--mute)}
+.bar{height:3px;border-radius:3px;background:rgba(255,255,255,.08);margin:12px 0 12px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb020,#ff5fb0,#6b5ce7,#2ec4c9);transition:width .9s ease}
+.members{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:0 18px}
+.members::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;display:flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;
+  font-size:12.5px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:#d7d3ee;
+}
+.chip b{font-weight:700;color:var(--ink)}
+.chip.me{border-color:rgba(255,211,236,.5)}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:#3a3950}
+.chip.today .dot{background:#ffd36b;box-shadow:0 0 6px #ffb020}
+.done-banner{
+  margin-top:12px;padding:12px 14px;border-radius:12px;text-align:center;
+  font-family:var(--serif);font-size:15px;line-height:1.6;
+  background:linear-gradient(90deg,rgba(255,176,32,.16),rgba(255,95,176,.16),rgba(107,92,231,.16));
+  border:1px solid rgba(255,255,255,.14);
+}
+.demo-bar{font-size:11.5px;color:#1a1030;background:#ffe9a8;text-align:center;padding:6px 12px}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:rgba(255,255,255,.12);border-bottom:3px solid rgba(255,255,255,.12)}
+.foot{padding:28px 20px 40px;text-align:center;font-family:var(--serif);font-size:13.5px;color:#5c5a75;line-height:1.8}
+
+/* ---------- 토스트 / 시트 ---------- */
+.toast{
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:30;
+  transform:translate(-50%,20px);opacity:0;pointer-events:none;
+  max-width:calc(100% - 40px);padding:12px 18px;border-radius:12px;font-size:14px;text-align:center;
+  background:rgba(30,28,52,.96);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.5);
+  transition:opacity .25s ease,transform .25s ease;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.sheet-wrap{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{
+  width:100%;max-width:520px;background:#141327;border-radius:18px 18px 0 0;
+  padding:10px 12px calc(14px + env(safe-area-inset-bottom,0px));
+}
+.sheet .who-am-i{padding:14px 10px 10px;font-size:13px;color:var(--mute)}
+.sheet button{display:block;width:100%;text-align:left;padding:15px 10px;font-size:16px;border-radius:10px}
+.sheet button:active{background:rgba(255,255,255,.06)}
+.sheet .danger{color:#ff9aa8}
+
+.loading{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:var(--night);font-family:var(--serif);color:var(--mute);text-align:center;line-height:1.8;padding:0 28px}
+
+@media (prefers-reduced-motion:reduce){
+  .flame svg,.cell.next .candle,.cell.igniting .halo,.finale.next .cluster{animation:none}
+  *{transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="loading" id="loading">촛불을 준비하고 있어요</div>
+
+  <!-- 로그인 -->
+  <section class="screen sky" id="login" hidden>
+    <div class="hero">
+      <div id="heroCandle"></div>
+      <h1 class="title">100번 새벽기도</h1>
+      <p class="sub">가족이 함께 켜는 백 개의 촛불.<br>새벽기도를 마치면 한 개씩 불을 밝혀요.</p>
+    </div>
+    <div class="inapp" id="inappNote" hidden>
+      카카오톡 안에서는 로그인이 잘 안 될 수 있어요.<br>기본 브라우저로 열어 주세요.
+      <button id="openExternal">브라우저로 열기</button>
+    </div>
+    <button class="kakao" id="kakaoBtn">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#000" d="M12 3C6.48 3 2 6.54 2 10.9c0 2.8 1.86 5.26 4.66 6.66l-.95 3.5c-.08.3.26.54.52.37l4.15-2.75c.53.07 1.07.11 1.62.11 5.52 0 10-3.54 10-7.9S17.52 3 12 3z"/></svg>
+      카카오로 시작하기
+    </button>
+    <p class="demo-note" id="demoNote" hidden>지금은 데모 모드예요. 서버를 연결하면 실제 카카오 로그인과 가족 동기화가 켜져요.</p>
+  </section>
+
+  <!-- 닉네임 -->
+  <section class="screen sky" id="nick" hidden>
+    <div class="form">
+      <h2 id="nickTitle">가족들에게 보일<br>이름을 정해 주세요</h2>
+      <div class="field">
+        <label for="nickInput">이름</label>
+        <input id="nickInput" maxlength="12" placeholder="예) 엄마, 소희" autocomplete="nickname">
+      </div>
+      <div class="field" id="codeField">
+        <label for="codeInput">가족 코드</label>
+        <input id="codeInput" maxlength="30" placeholder="가족에게 받은 코드를 입력해요" autocomplete="off">
+      </div>
+      <button class="primary" id="nickSubmit" disabled>시작하기</button>
+      <button class="ghost" id="nickCancel" hidden>취소</button>
+    </div>
+  </section>
+
+  <!-- 메인 -->
+  <section id="main" hidden>
+    <div class="demo-bar" id="demoBar" hidden>데모 모드 · 하루 한 번 제한 없이 눌러볼 수 있어요</div>
+    <header class="head">
+      <div class="head-row">
+        <h1>100번 새벽기도</h1>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span class="tally"><b id="count">0</b>/ <span id="goal">100</span></span>
+          <button class="menu-btn" id="menuBtn" aria-label="메뉴">⋯</button>
+        </div>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="members" id="members"></div>
+      <div class="done-banner" id="doneBanner" hidden></div>
+    </header>
+    <div class="grid" id="grid"></div>
+    <p class="foot">한 사람이 하루에 한 번 켤 수 있어요.<br>촛불은 1번부터 차례로 밝혀져요.</p>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="sheet-wrap" id="sheet" hidden>
+    <div class="sheet">
+      <div class="who-am-i" id="sheetWho"></div>
+      <button id="renameBtn">이름 바꾸기</button>
+      <button id="fillDemoBtn" hidden>데모: 99번까지 채워 보기</button>
+      <button id="resetDemoBtn" hidden>데모 초기화</button>
+      <button id="logoutBtn" class="danger">로그아웃</button>
+      <button id="closeSheet">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   설정 — Supabase 프로젝트 값을 넣으면 실서비스 모드로 동작해요.
+   비워두면 이 기기 안에서만 도는 데모 모드예요.
+   ========================================================= */
+const CONFIG = {
+  SUPABASE_URL: '',        // 예) https://abcdefgh.supabase.co
+  SUPABASE_ANON_KEY: '',   // Project Settings > API > anon public key
+  GOAL: 100
+};
+
+// 설정값이 있는데 라이브러리만 못 불러온 경우엔 데모로 빠지지 않고 에러를 보여줘요
+const DEMO = !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY;
+const GOAL = CONFIG.GOAL;
+
+/* 참고 이미지의 9가지 그라데이션 */
+const PALETTE = [
+  ['#ffb020','#ff6a2e','#f0306a','#d81e5b'],
+  ['#fff07a','#ffb1cf','#ff66b3','#5a3ee0'],
+  ['#fff4d2','#ffb3cc','#8c78e6','#2432c9'],
+  ['#9fdcff','#ffa8d2','#b28bf0','#3a2fd0'],
+  ['#fff27a','#ffc0d8','#ff5fb0','#ff8fcf'],
+  ['#ffec5c','#ff9a1f','#ff5fb0','#b0189e'],
+  ['#ffc2dc','#ff78a8','#e38bd8','#c7a4ff'],
+  ['#e0ffd6','#7fe0cf','#2ec4c9','#1f5fe0'],
+  ['#ffe066','#ff8a00','#ff2fa0','#d000a0']
+];
+
+/* 100번째 칸에 나오는 말씀 (줄 단위) */
+const VERSE = {
+  lines: ['일어나라 빛을 발하라', '이는 네 빛이 이르렀고', '여호와의 영광이', '네 위에 임하였음이니라'],
+  ref: '이사야 60:1'
+};
+
+/* 100번째 칸의 모여 있는 촛불들 — x: 가운데 위치, w: 폭, h: 높이, b: 바닥(%), c: 색, dl/dx: 촛농 길이/위치 */
+const FINALE_PALETTE = [
+  ['#ffe1b0','#ffb8a8','#ff9cb8'],
+  ['#fff2b8','#ffcb7a','#ff9f6a'],
+  ['#ffeccc','#a6e6d2','#3fb8b0'],
+  ['#ffdcea','#f7abc9','#e08ab8'],
+  ['#fff4da','#ffd490','#f5ae62'],
+  ['#d6f5e8','#86d9c5','#2aa198']
+];
+const FINALE_CANDLES = [
+  // 뒷줄 (높고 양옆)
+  {x:12,w:18,h:60,b:5,c:0,dl:34,dx:62},
+  {x:88,w:18,h:64,b:5,c:3,dl:26,dx:18},
+  {x:31,w:15,h:36,b:5,c:1,dl:40,dx:14},
+  {x:69,w:15,h:38,b:5,c:2,dl:22,dx:66},
+  {x:50,w:16,h:28,b:5,c:4,dl:30,dx:40},
+  // 앞줄 (낮고 촘촘)
+  {x:5, w:15,h:26,b:5,c:2,dl:28,dx:60},
+  {x:23,w:16,h:21,b:5,c:5,dl:36,dx:20},
+  {x:41,w:14,h:16,b:5,c:0,dl:30,dx:62},
+  {x:59,w:15,h:23,b:5,c:3,dl:24,dx:26},
+  {x:77,w:16,h:18,b:5,c:1,dl:38,dx:58},
+  {x:95,w:14,h:30,b:5,c:5,dl:26,dx:24}
+];
+
+const $ = s => document.querySelector(s);
+const state = { me:null, profiles:{}, prayers:[], sb:null, channel:null, nickMode:'join' };
+
+/* ---------- 유틸 ---------- */
+function todayKST(){ return new Date(Date.now() + 9*3600e3).toISOString().slice(0,10); }
+function addDays(iso,n){ const t=new Date(iso+'T00:00:00Z'); t.setUTCDate(t.getUTCDate()+n); return t.toISOString().slice(0,10); }
+function fmtDate(iso){
+  const [y,m,d] = iso.split('-').map(Number);
+  const w = '일월화수목금토'[new Date(Date.UTC(y,m-1,d)).getUTCDay()];
+  return `${m}.${d} (${w})`;
+}
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let toastTimer;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600); }
+function show(id){ ['login','nick','main'].forEach(s=>$('#'+s).hidden = s!==id); $('#loading').hidden=true; }
+
+/* ---------- 밤하늘 · 결 텍스처 ---------- */
+function makeTextures(){
+  const c=document.createElement('canvas'); c.width=c.height=260; const x=c.getContext('2d');
+  for(let i=0;i<150;i++){
+    const r=Math.random(); x.fillStyle=`rgba(255,255,255,${(Math.random()*.7+.15).toFixed(2)})`;
+    x.beginPath(); x.arc(Math.random()*260,Math.random()*260, r<.88?.55:r<.98?.9:1.3, 0, 7); x.fill();
+  }
+  const g=document.createElement('canvas'); g.width=g.height=90; const y=g.getContext('2d');
+  for(let i=0;i<700;i++){ y.fillStyle=Math.random()<.5?'rgba(255,255,255,.5)':'rgba(40,20,80,.45)'; y.fillRect(Math.random()*90,Math.random()*90,1,1); }
+  // 낮 하늘 구름 (타일 가장자리에 걸리지 않게 안쪽에만)
+  const k=document.createElement('canvas'); k.width=k.height=320; const z=k.getContext('2d');
+  for(let n=0;n<4;n++){
+    const cx=70+Math.random()*180, cy=50+Math.random()*220, s=18+Math.random()*16;
+    for(let i=0;i<7;i++){
+      const px=cx+(Math.random()-.5)*s*3.2, py=cy+(Math.random()-.5)*s*.9, r=s*(.7+Math.random()*.6);
+      const gr=z.createRadialGradient(px,py,0,px,py,r);
+      gr.addColorStop(0,'rgba(255,255,255,.75)'); gr.addColorStop(.6,'rgba(255,255,255,.35)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+      z.fillStyle=gr; z.beginPath(); z.arc(px,py,r,0,7); z.fill();
+    }
+  }
+  const root=document.documentElement.style;
+  root.setProperty('--clouds',`url(${k.toDataURL()})`);
+  root.setProperty('--stars',`url(${c.toDataURL()})`);
+  root.setProperty('--grain',`url(${g.toDataURL()})`);
+}
+
+/* ---------- 촛불 마크업 ---------- */
+const FLAME = '<svg viewBox="0 0 20 30" aria-hidden="true"><path fill="#fff" d="M10 0C10 0 20 13.5 20 20a10 10 0 0 1-20 0C0 13.5 10 0 10 0z"/></svg>';
+function finaleHTML(slot){
+  const candles = FINALE_CANDLES.map((f,i)=>{
+    const p=FINALE_PALETTE[f.c];
+    return `<div class="fc" style="--x:${f.x}%;--w:${f.w}%;--h:${f.h}%;--b:${f.b}%;--g:linear-gradient(180deg,${p.join(',')});--glow:${p[1]};--d:${(i*.13).toFixed(2)}s;--fd:-${(i%5)*.43}s;z-index:${i<5?1:2}">
+      <div class="orb"></div><div class="wick"></div><div class="flame">${FLAME}</div>
+      <div class="fbody"><div class="color"></div><div class="cap"></div><div class="drip" style="--dl:${f.dl}%;--dx:${f.dx}%"></div></div>
+    </div>`;
+  }).join('');
+  return `<div class="cell sky finale" id="c${slot}" style="--sx:-40px;--sy:-90px">
+    <div class="stage">
+      <div class="cluster">${candles}</div>
+      <div class="water" style="--base:#ff9cb8;width:96%;height:7%;bottom:0"></div>
+      <div class="finale-text">
+        <div class="big">${slot}</div>
+        <p class="verse">${VERSE.lines.map(esc).join('<br>')}</p>
+        <p class="ref">${esc(VERSE.ref)}</p>
+      </div>
+      <button class="light-btn" data-slot="${slot}">마지막 촛불 켜기</button>
+    </div>
+    <div class="meta"><span class="num">마지막 촛불</span><span class="date"></span><span class="who"></span></div>
+  </div>`;
+}
+
+function candleHTML(slot){
+  if(slot===GOAL) return finaleHTML(slot);
+  const p = PALETTE[(slot-1)%PALETTE.length];
+  const h = 50 + ((slot*37)%6)*3.5;            // 50% ~ 67.5% 높이 변화
+  const sx = -((slot*83)%260), sy = -((slot*131)%260);
+  return `<div class="cell sky" id="c${slot}" style="--g:linear-gradient(180deg,${p.join(',')});--glow:${p[1]};--base:${p[3]};--h:${h}%;--fd:-${(slot%7)*.37}s;--sx:${sx}px;--sy:${sy}px">
+    <div class="stage">
+      <div class="halo"></div>
+      <div class="candle"><div class="wick"></div><div class="flame">${FLAME}</div><div class="body"><div class="color"></div></div></div>
+      <div class="water"></div>
+      <button class="light-btn" data-slot="${slot}">기도 켜기</button>
+    </div>
+    <div class="meta"><span class="num">${slot}</span><span class="date"></span><span class="who"></span></div>
+  </div>`;
+}
+
+function buildGrid(){
+  let html=''; for(let s=1;s<=GOAL;s++) html+=candleHTML(s);
+  $('#grid').innerHTML=html;
+  $('#heroCandle').innerHTML=candleHTML(5); // 로그인 화면의 대표 촛불
+  const hero=$('#heroCandle .cell'); hero.id=''; hero.classList.add('lit','vis'); hero.classList.remove('sky');
+  hero.querySelector('.light-btn').remove();
+
+  // 불꽃 흔들림은 화면 근처 칸만 (100개가 동시에 돌면 구형 폰이 버거워요)
+  const cells=document.querySelectorAll('#grid .cell');
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('vis',e.isIntersecting)),{rootMargin:'150px 0px'});
+    cells.forEach(c=>io.observe(c));
+  }else cells.forEach(c=>c.classList.add('vis'));
+
+  $('#goal').textContent=GOAL;
+  $('#doneBanner').innerHTML=`${GOAL}번의 새벽기도를 함께 채웠어요.<br>모두 수고 많으셨어요 🕯️`;
+}
+
+/* ---------- 렌더 ---------- */
+function litToday(){ return state.prayers.some(p=>p.user_id===state.me?.id && p.prayed_on===todayKST()); }
+
+function render(){
+  const bySlot={}; state.prayers.forEach(p=>bySlot[p.slot]=p);
+  const count=state.prayers.length, next=count+1;
+  const blocked = !DEMO && litToday();
+
+  for(let s=1;s<=GOAL;s++){
+    const el=document.getElementById('c'+s); if(!el) continue;
+    const p=bySlot[s];
+    el.classList.toggle('lit',!!p);
+    el.classList.toggle('next',!p && s===next);
+    el.classList.toggle('mine',!!p && p.user_id===state.me?.id);
+    if(p){
+      el.querySelector('.date').textContent=fmtDate(p.prayed_on);
+      el.querySelector('.who').textContent=state.profiles[p.user_id]?.nickname || '가족';
+    }
+    if(!p && s===next){
+      const b=el.querySelector('.light-btn');
+      b.disabled=blocked; b.textContent=blocked?'오늘은 켰어요':s===GOAL?'마지막 촛불 켜기':'기도 켜기';
+    }
+  }
+
+  $('#count').textContent=count;
+  $('#barFill').style.width=Math.min(100,count/GOAL*100)+'%';
+  $('#doneBanner').hidden = count<GOAL;
+  setDaylight(count);
+
+  const tally={}; state.prayers.forEach(p=>tally[p.user_id]=(tally[p.user_id]||0)+1);
+  const today=todayKST();
+  const todaySet=new Set(state.prayers.filter(p=>p.prayed_on===today).map(p=>p.user_id));
+  const list=Object.values(state.profiles).sort((a,b)=>
+    (b.id===state.me?.id)-(a.id===state.me?.id) || (tally[b.id]||0)-(tally[a.id]||0));
+  $('#members').innerHTML=list.map(m=>
+    `<span class="chip${m.id===state.me?.id?' me':''}${todaySet.has(m.id)?' today':''}"><i class="dot"></i>${esc(m.nickname)} <b>${tally[m.id]||0}</b></span>`
+  ).join('');
+}
+
+// 방금 100번째가 켜졌으면 밤에 다 켜진 촛불을 잠깐 보여준 뒤 낮으로, 이미 완성된 상태로 열면 바로 낮으로
+let lastCount=null, dayTimer=null;
+function setDaylight(count){
+  const cl=document.body.classList, justDone=lastCount!==null && lastCount<GOAL;
+  lastCount=count;
+  if(count<GOAL){ clearTimeout(dayTimer); dayTimer=null; cl.remove('daylight'); return; }
+  if(cl.contains('daylight') || dayTimer) return;
+  if(justDone) dayTimer=setTimeout(()=>{ dayTimer=null; cl.add('daylight'); },3000);
+  else cl.add('daylight');
+}
+
+function addPrayer(row){
+  if(!row || state.prayers.some(p=>p.slot===row.slot)) return false;
+  state.prayers.push(row); state.prayers.sort((a,b)=>a.slot-b.slot);
+  render(); return true;
+}
+
+function ignite(slot){
+  const el=document.getElementById('c'+slot); if(!el) return;
+  el.classList.remove('igniting'); void el.offsetWidth; el.classList.add('igniting');
+  setTimeout(()=>el.classList.remove('igniting'),1500);
+  if(state.prayers.length===GOAL) setTimeout(()=>toast(`${GOAL}번째 촛불이 켜졌어요. 함께 해냈어요 🕯️`),900);
+}
+
+function scrollToNext(){
+  const el=document.getElementById('c'+Math.min(GOAL,state.prayers.length+1));
+  if(el && state.prayers.length>3) el.scrollIntoView({block:'center'});
+}
+
+/* ---------- 기도 켜기 ---------- */
+async function lightCandle(btn){
+  btn.disabled=true;
+  try{
+    const row = DEMO ? demoLight() : await realLight();
+    if(addPrayer(row)){ ignite(row.slot); navigator.vibrate?.(25); }
+    if(state.prayers.length<GOAL) toast('오늘의 촛불을 켰어요 🙏');
+  }catch(e){
+    const m=String(e?.message||e);
+    toast(m.includes('already_today')?'오늘은 이미 촛불을 켰어요. 내일 새벽에 만나요'
+        : m.includes('completed')?`${GOAL}개의 촛불이 모두 켜졌어요`
+        : m.includes('not_member')?'가족 등록이 필요해요. 다시 로그인해 주세요'
+        : '연결이 불안정해요. 잠시 후 다시 눌러 주세요');
+    if(!DEMO){ try{ await loadAll(); }catch{} }
+    render();
+  }
+}
+
+/* =========================================================
+   실서비스 모드 (Supabase + 카카오)
+   ========================================================= */
+async function initReal(){
+  if(!window.supabase) throw new Error('supabase_lib');
+  const sb = state.sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  sb.auth.onAuthStateChange((ev)=>{
+    if(ev==='SIGNED_OUT'){
+      state.me=null; state.profiles={}; state.prayers=[];
+      if(state.channel){ sb.removeChannel(state.channel); state.channel=null; }
+      show('login');
+    }
+  });
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) return show('login');
+  await afterAuth(session.user);
+}
+
+async function afterAuth(user){
+  const { data:prof, error } = await state.sb.from('profiles').select('id,nickname').eq('id',user.id).maybeSingle();
+  if(error) throw error;   // 네트워크 오류를 "가입 안 됨"으로 착각하지 않게
+  state.me={ id:user.id, nickname:prof?.nickname };
+  if(!prof){
+    const m=user.user_metadata||{};
+    $('#nickInput').value=(m.nickname||m.name||m.full_name||m.preferred_username||'').slice(0,12);
+    return openNick('join');
+  }
+  await enterMain();
+}
+
+async function loadAll(){
+  const [{data:profs,error:e1},{data:prs,error:e2}] = await Promise.all([
+    state.sb.from('profiles').select('id,nickname'),
+    state.sb.from('prayers').select('id,slot,user_id,prayed_on').order('slot')
+  ]);
+  if(e1||e2) throw (e1||e2);
+  state.profiles=Object.fromEntries((profs||[]).map(p=>[p.id,p]));
+  state.prayers=prs||[];
+  if(state.me && state.profiles[state.me.id]) state.me.nickname=state.profiles[state.me.id].nickname;
+}
+
+async function refresh(){ try{ await loadAll(); render(); }catch{} }
+
+let visHooked=false;
+function subscribe(){
+  if(state.channel) return;
+  state.channel = state.sb.channel('hope-family')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'prayers'}, async ({new:row})=>{
+      if(!state.profiles[row.user_id]){ try{ await loadAll(); }catch{} }
+      if(addPrayer(row)){
+        ignite(row.slot);
+        if(row.user_id!==state.me?.id) toast(`${state.profiles[row.user_id]?.nickname||'가족'}님이 촛불을 켰어요 🕯️`);
+      }
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'profiles'}, refresh)
+    .subscribe();
+  if(visHooked) return; visHooked=true;
+  // 모바일에서 앱을 다시 열 때 최신 상태로 맞춤
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState==='visible' && state.me && !$('#main').hidden) refresh();
+  });
+}
+
+async function realLight(){
+  const { data, error } = await state.sb.rpc('light_candle');
+  if(error) throw error;
+  return Array.isArray(data)?data[0]:data;
+}
+
+/* =========================================================
+   데모 모드 (이 기기의 브라우저에만 저장)
+   ========================================================= */
+const DEMO_KEY='hope-100-demo-v1';
+function demoRead(){ try{ return JSON.parse(localStorage.getItem(DEMO_KEY)||'null'); }catch{ return null; } }
+function demoWrite(){ try{ localStorage.setItem(DEMO_KEY, JSON.stringify({me:state.me,profiles:state.profiles,prayers:state.prayers})); }catch{} }
+function demoSeed(){
+  const fam=[['u-mom','엄마'],['u-dad','아빠'],['u-bro','오빠'],['u-sis','언니'],['u-grand','할머니']];
+  const profiles={}; fam.forEach(([id,nickname])=>profiles[id]={id,nickname});
+  const prayers=[]; let slot=1;
+  for(let d=4; d>=1; d--){
+    fam.forEach(([id],i)=>{ if((d+i)%3!==0) prayers.push({id:'d'+slot,slot:slot++,user_id:id,prayed_on:addDays(todayKST(),-d)}); });
+  }
+  return {me:null,profiles,prayers};
+}
+function initDemo(){
+  const d=demoRead()||demoSeed();
+  state.me=d.me; state.profiles=d.profiles; state.prayers=d.prayers;
+  $('#demoNote').hidden=false; $('#demoBar').hidden=false; $('#resetDemoBtn').hidden=false; $('#fillDemoBtn').hidden=false;
+  $('#codeField').hidden=true;
+  show('login');
+}
+function demoLight(){
+  if(state.prayers.length>=GOAL) throw new Error('completed');
+  const row={id:'d'+Date.now(),slot:state.prayers.length+1,user_id:state.me.id,prayed_on:todayKST()};
+  setTimeout(demoWrite,0);
+  return row;
+}
+
+/* ---------- 화면 전환 ---------- */
+async function enterMain(){
+  if(!DEMO){ await loadAll(); subscribe(); }
+  show('main'); render();
+  requestAnimationFrame(scrollToNext);
+}
+
+function openNick(mode){
+  state.nickMode=mode;
+  const edit=mode==='edit';
+  $('#nickTitle').innerHTML= edit?'새 이름을<br>입력해 주세요':'가족들에게 보일<br>이름을 정해 주세요';
+  $('#codeField').hidden = DEMO || edit;
+  $('#nickCancel').hidden = !edit;
+  $('#nickSubmit').textContent = edit?'저장하기':'시작하기';
+  if(edit) $('#nickInput').value=state.me?.nickname||'';
+  validateNick(); show('nick'); setTimeout(()=>$('#nickInput').focus(),50);
+}
+function validateNick(){
+  const ok=$('#nickInput').value.trim().length>0 && ($('#codeField').hidden || $('#codeInput').value.trim().length>0);
+  $('#nickSubmit').disabled=!ok;
+}
+
+async function submitNick(){
+  const nickname=$('#nickInput').value.trim().slice(0,12);
+  const btn=$('#nickSubmit'); btn.disabled=true;
+  try{
+    if(DEMO){
+      if(!state.me) state.me={id:'u-me',nickname};
+      state.me.nickname=nickname; state.profiles[state.me.id]={id:state.me.id,nickname};
+      demoWrite();
+    }else if(state.nickMode==='edit'){
+      const {error}=await state.sb.from('profiles').update({nickname}).eq('id',state.me.id);
+      if(error) throw error;
+      state.me.nickname=nickname;
+    }else{
+      const {error}=await state.sb.rpc('join_family',{p_nickname:nickname,p_code:$('#codeInput').value.trim()});
+      if(error) throw error;
+      state.me.nickname=nickname;
+    }
+    await enterMain();
+    if(state.nickMode==='edit') toast('이름을 바꿨어요');
+  }catch(e){
+    const m=String(e?.message);
+    toast(m.includes('wrong_code')?'가족 코드가 맞지 않아요. 다시 확인해 주세요'
+        : m.includes('code_not_set')?'아직 가족 코드가 설정되지 않았어요. 관리자에게 알려 주세요'
+        : '저장하지 못했어요. 다시 시도해 주세요');
+    validateNick();
+  }
+}
+
+/* ---------- 이벤트 ---------- */
+$('#kakaoBtn').addEventListener('click', async ()=>{
+  if(DEMO){ return state.me ? enterMain() : openNick('join'); }
+  const { error } = await state.sb.auth.signInWithOAuth({
+    provider:'kakao',
+    options:{ redirectTo: location.origin + location.pathname }
+  });
+  if(error) toast('카카오 로그인을 열지 못했어요');
+});
+$('#nickInput').addEventListener('input',validateNick);
+$('#codeInput').addEventListener('input',validateNick);
+$('#nickInput').addEventListener('keydown',e=>{ if(e.key==='Enter' && !$('#nickSubmit').disabled) submitNick(); });
+$('#codeInput').addEventListener('keydown',e=>{ if(e.key==='Enter' && !$('#nickSubmit').disabled) submitNick(); });
+$('#nickSubmit').addEventListener('click',submitNick);
+$('#nickCancel').addEventListener('click',()=>show('main'));
+$('#grid').addEventListener('click',e=>{ const b=e.target.closest('.light-btn'); if(b && !b.disabled) lightCandle(b); });
+
+$('#menuBtn').addEventListener('click',()=>{ $('#sheetWho').textContent=`${state.me?.nickname||''}님으로 로그인 중`; $('#sheet').hidden=false; });
+$('#closeSheet').addEventListener('click',()=>$('#sheet').hidden=true);
+$('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet') $('#sheet').hidden=true; });
+$('#renameBtn').addEventListener('click',()=>{ $('#sheet').hidden=true; openNick('edit'); });
+$('#logoutBtn').addEventListener('click',async ()=>{
+  $('#sheet').hidden=true;
+  if(DEMO){ state.me=null; demoWrite(); show('login'); }
+  else await state.sb.auth.signOut();
+});
+$('#fillDemoBtn').addEventListener('click',()=>{
+  // 마지막 칸을 바로 볼 수 있게 99번까지 채움 (하루 5~6개씩, 어제까지)
+  $('#sheet').hidden=true;
+  const ids=Object.keys(state.profiles), perDay=ids.length;
+  state.prayers=[];
+  for(let s=1;s<GOAL;s++){
+    state.prayers.push({id:'d'+s,slot:s,user_id:ids[(s-1)%ids.length],prayed_on:addDays(todayKST(),-Math.ceil((GOAL-s)/perDay))});
+  }
+  demoWrite(); render(); requestAnimationFrame(scrollToNext);
+});
+$('#resetDemoBtn').addEventListener('click',()=>{
+  try{ localStorage.removeItem(DEMO_KEY); }catch{}
+  $('#sheet').hidden=true; const d=demoSeed();
+  state.me=null; state.profiles=d.profiles; state.prayers=d.prayers; $('#nickInput').value=''; show('login');
+});
+
+// 카카오톡 인앱 브라우저 → 기본 브라우저로 열기 안내
+if(/KAKAOTALK/i.test(navigator.userAgent)){
+  $('#inappNote').hidden=false;
+  $('#openExternal').addEventListener('click',()=>{
+    location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(location.href);
+  });
+}
+
+// 앱을 켜둔 채 자정(한국 시간)이 지나면 "오늘은 켰어요"를 풀어줌
+let lastDay=todayKST();
+setInterval(()=>{
+  const d=todayKST(); if(d===lastDay) return; lastDay=d;
+  if(!$('#main').hidden){ DEMO ? render() : refresh(); }
+},60e3);
+
+/* ---------- 시작 ---------- */
+makeTextures(); buildGrid();
+(DEMO ? Promise.resolve(initDemo()) : initReal()).catch(e=>{
+  if(String(e?.message).includes('supabase_lib')){
+    $('#loading').innerHTML='서버 연결 도구를 불러오지 못했어요.<br>인터넷 연결을 확인하고 다시 열어 주세요.';
+    return;
+  }
+  show('login'); toast('서버에 연결하지 못했어요');
+});
+</script>
+</body>
+</html>
