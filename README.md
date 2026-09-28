@@ -72,7 +72,8 @@
 ## 2. 기술 구성
 
 - **프론트**: `index.html` 한 파일 (빌드 없음, 순수 HTML/CSS/JS)
-- **백엔드**: Supabase — Auth(카카오 OAuth), Postgres, Realtime
+- **백엔드**: Supabase — Auth, Postgres, Realtime, Edge Function(`kakao-token`)
+- **카카오 로그인**: 이메일 동의 없이 동작하도록 OpenID Connect 사용. 앱 → 카카오 인가 화면 → 돌아온 code를 Edge Function이 Client Secret으로 ID 토큰과 교환 → `signInWithIdToken`으로 Supabase 로그인 (Supabase 기본 카카오 OAuth는 이메일 권한을 항상 요청해서 비즈 앱 심사 없이 못 씀)
 - **라이브러리**: `@supabase/supabase-js@2` (CDN UMD)
 - **데모 모드**: `CONFIG`가 비어 있으면 localStorage로 이 기기에서만 동작. 예시 가족 5명 기록이 들어가 있고 하루 1회 제한 없음. 메뉴의 "데모: 99번까지 채워 보기"로 마지막 칸을 바로 확인 가능
   - 설정값을 넣었는데 CDN을 못 불러오면 데모로 빠지지 않고 "서버 연결 도구를 불러오지 못했어요" 안내
@@ -82,6 +83,7 @@
 hope/
 ├── index.html             앱 전체 (화면, 로그인, 동기화, 데모 모드)
 ├── schema.sql             Supabase 테이블 · RLS · 함수 · Realtime
+├── supabase/functions/kakao-token/index.ts   카카오 code → ID 토큰 교환 (Client Secret 보관)
 ├── manifest.webmanifest   홈 화면에 추가할 때 앱 이름 · 아이콘
 ├── apple-touch-icon.png   iPhone 홈 화면 아이콘 (180)
 ├── icon-192.png           Android / 파비콘
@@ -119,20 +121,20 @@ hope/
 2. SQL Editor에 `schema.sql` 실행. SQL Editor에 붙여넣은 뒤 `'CHANGE_ME'`를 실제 가족 코드로 바꿔서 실행 (**파일에는 저장하지 않기** — 공개 저장소라서). 안 바꾸면 아무도 가입할 수 없음
 3. Project Settings → API에서 `Project URL`, `anon public` 키 복사
 
-### 3-2. 카카오
-1. https://developers.kakao.com → 애플리케이션 추가
-2. 앱 키 → `REST API 키` 복사
-3. 카카오 로그인 활성화
-4. Redirect URI: `https://<프로젝트ID>.supabase.co/auth/v1/callback`
-5. 카카오 로그인 → 보안 → Client Secret 생성·활성화
-6. 동의항목: 닉네임, 프로필 사진
-7. 플랫폼 → Web에 배포 도메인 등록
+### 3-2. 카카오 (developers.kakao.com)
+1. 애플리케이션 추가
+2. 앱 → 플랫폼 키 → **REST API 키** 상세 화면에서
+   - **카카오 로그인 리다이렉트 URI**: 앱 주소 그대로 (`https://dusohee.github.io/hope/`, 로컬 테스트용 `http://localhost:3000/`)
+   - **클라이언트 시크릿**: 자동 생성·활성화돼 있음 → 복사
+3. 플랫폼 → Web 사이트 도메인: `https://dusohee.github.io`
+4. 카카오 로그인: 사용 설정 **ON**, **OpenID Connect ON**
+5. 동의항목: 닉네임, 프로필 사진 (이메일은 필요 없음)
 
-### 3-3. Supabase에 카카오 연결
-1. Authentication → Providers → Kakao 활성화
-   - Client ID = REST API 키, Client Secret = 카카오 Client Secret
-   - **Allow users without an email** 켜기
-2. Authentication → URL Configuration: Site URL과 Redirect URLs에 배포 주소 (로컬이면 `http://localhost:3000`도)
+### 3-3. Supabase에 카카오 연결 (이 프로젝트는 Management API로 설정함)
+1. Authentication → Providers → Kakao 활성화, Client ID = REST API 키, **Allow users without an email** 켜기
+2. Edge Function 배포: `npx supabase functions deploy kakao-token --project-ref <ref> --use-api`
+3. Edge Function 시크릿: `KAKAO_REST_KEY`, `KAKAO_CLIENT_SECRET` (Dashboard → Edge Functions → Secrets)
+4. 함수의 `ALLOWED` 목록에 앱 주소의 origin이 있어야 함
 
 > 콘솔 메뉴 이름은 바뀔 수 있어요. 위치가 다르면 각 서비스의 Kakao 로그인 문서를 확인하세요.
 
@@ -140,16 +142,16 @@ hope/
 `index.html` 스크립트 맨 위:
 ```js
 const CONFIG = {
-  SUPABASE_URL: 'https://abcdefgh.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOi...',
+  SUPABASE_URL: 'https://<ref>.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOi...',   // anon public
+  KAKAO_REST_KEY: '...',                 // REST API 키
   GOAL: 100
 };
 ```
-anon 키는 공개돼도 되는 키. 데이터는 RLS + 가족 코드로 보호.
+anon 키와 REST API 키는 공개돼도 되는 값. **Client Secret과 service_role 키는 절대 index.html에 넣지 않기.** 데이터는 RLS + 가족 코드로 보호.
 
 ### 3-5. 배포
-Netlify Drop(https://app.netlify.com/drop)에 폴더를 끌어다 놓거나 Vercel / GitHub Pages. 배포 주소를 카카오 Web 플랫폼과 Supabase URL 설정에 등록.
-아이콘·manifest 파일도 같은 폴더에 함께 올려야 홈 화면 아이콘이 나와요.
+GitHub Pages (`dusohee/hope`, main 브랜치 루트) → https://dusohee.github.io/hope/ . main에 push하면 1~2분 뒤 반영.
 
 ### 3-6. 가족 공유
 링크 + 가족 코드를 카톡으로 전달 → Safari/Chrome으로 열어서 **홈 화면에 추가**.
@@ -170,8 +172,8 @@ Netlify Drop(https://app.netlify.com/drop)에 폴더를 끌어다 놓거나 Verc
 
 | 증상 | 원인 · 해결 |
 |---|---|
-| 카카오 화면에 **KOE205** (잘못된 요청 / 동의항목 미설정) | Supabase가 카카오에 `account_email` 동의를 기본으로 함께 요청하는 경우가 있어요. 카카오 콘솔 → 동의항목에서 "카카오계정(이메일)"을 **선택 동의**로 켜야 하는데, 이 항목은 비즈 앱 전환이 필요해요. 사업자가 없어도 **개인 개발자 비즈 앱**으로 전환할 수 있어요 (앱 설정 → 비즈니스). |
-| **KOE006** (등록되지 않은 Redirect URI) | 카카오 Redirect URI가 `https://<프로젝트ID>.supabase.co/auth/v1/callback`과 정확히 같은지 확인 |
-| 로그인 후 다시 로그인 화면 | Supabase Redirect URLs에 배포 주소(끝의 `/` 포함 여부까지)가 등록됐는지 확인 |
+| 카카오 화면에 **KOE205** | 동의항목에 없는 권한을 요청한 경우. 앱은 `openid profile_nickname profile_image`만 요청하므로 닉네임·프로필 사진 동의항목이 켜져 있는지 확인 |
+| 로그인 후 "카카오 로그인에 실패했어요" | OpenID Connect가 OFF이거나(ID 토큰 없음) Edge Function 시크릿(`KAKAO_CLIENT_SECRET`)이 틀린 경우. Dashboard → Edge Functions → kakao-token → Logs 확인 |
+| **KOE006** (등록되지 않은 Redirect URI) | REST API 키 상세의 "카카오 로그인 리다이렉트 URI"에 `https://dusohee.github.io/hope/`가 끝의 `/`까지 정확히 있는지 확인 |
 | iPhone 홈 화면 앱에서 로그인 후 Safari로 튕김 | iOS 홈 화면 앱은 Safari와 저장소가 분리돼 있어요. 홈 화면 앱 **안에서** 카카오 로그인을 한 번 더 해 주세요. 계속 튕기면 `index.html`의 `apple-mobile-web-app-capable` 줄을 지워 Safari 탭으로 열리게 하면 확실해요 |
 | 다른 가족이 켠 촛불이 바로 안 보임 | `schema.sql` 6번(Realtime publication)이 실행됐는지 확인. 앱을 닫았다 열면 어쨌든 최신으로 맞춰져요 |

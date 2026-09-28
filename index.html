@@ -399,8 +399,9 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
    비워두면 이 기기 안에서만 도는 데모 모드예요.
    ========================================================= */
 const CONFIG = {
-  SUPABASE_URL: '',        // 예) https://abcdefgh.supabase.co
-  SUPABASE_ANON_KEY: '',   // Project Settings > API > anon public key
+  SUPABASE_URL: 'https://rvopecmtqdhyzzcqpfys.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2b3BlY210cWRoeXp6Y3FwZnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MzAyOTksImV4cCI6MjEwNjEwNjI5OX0.n5lBt_s_Qe2-ku-wL7UR8gxSaLKEEBKm5pMXkqG8Jtk',   // anon public key (공개돼도 되는 키)
+  KAKAO_REST_KEY: '48f38a49d9c537ba7994875772389a53',   // 카카오 앱 키 > REST API 키 (공개돼도 되는 값)
   GOAL: 100
 };
 
@@ -642,9 +643,40 @@ async function lightCandle(btn){
 /* =========================================================
    실서비스 모드 (Supabase + 카카오)
    ========================================================= */
+
+/* 카카오 로그인 — 이메일 동의 없이 OpenID Connect ID 토큰으로 Supabase에 로그인
+   1) 카카오 인가 화면으로 이동  2) 돌아온 code를 Edge Function(kakao-token)이 ID 토큰으로 교환
+   3) signInWithIdToken 으로 Supabase 세션 생성 */
+const KAKAO_TMP='hope-kakao-login';
+function randHex(){ return [...crypto.getRandomValues(new Uint8Array(16))].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+async function sha256hex(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+function redirectUri(){ return location.origin + location.pathname; }
+
+async function kakaoLogin(){
+  const st=randHex(), nonce=randHex();
+  try{ localStorage.setItem(KAKAO_TMP, JSON.stringify({st,nonce})); }catch{}
+  const q=new URLSearchParams({
+    client_id:CONFIG.KAKAO_REST_KEY, redirect_uri:redirectUri(), response_type:'code',
+    scope:'openid profile_nickname profile_image', state:st, nonce:await sha256hex(nonce)
+  });
+  location.href='https://kauth.kakao.com/oauth/authorize?'+q;
+}
+
+async function finishKakao(){
+  const u=new URL(location.href), code=u.searchParams.get('code'), err=u.searchParams.get('error');
+  if(!code && !err) return;
+  history.replaceState(null,'',location.pathname);   // 주소창의 code 지우기
+  let saved=null; try{ saved=JSON.parse(localStorage.getItem(KAKAO_TMP)); localStorage.removeItem(KAKAO_TMP); }catch{}
+  if(err) throw new Error('kakao_'+err);
+  if(!saved || saved.st!==u.searchParams.get('state')) throw new Error('kakao_state');
+  const { data, error } = await state.sb.functions.invoke('kakao-token',{ body:{ code, redirect_uri:redirectUri() } });
+  if(error || !data?.id_token) throw error || new Error('kakao_token');
+  const { error:e2 } = await state.sb.auth.signInWithIdToken({ provider:'kakao', token:data.id_token, nonce:saved.nonce });
+  if(e2) throw e2;
+}
 async function initReal(){
   if(!window.supabase) throw new Error('supabase_lib');
-  const sb = state.sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  const sb = state.sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { auth:{ detectSessionInUrl:false } });
   sb.auth.onAuthStateChange((ev)=>{
     if(ev==='SIGNED_OUT'){
       state.me=null; state.profiles={}; state.prayers=[];
@@ -652,8 +684,14 @@ async function initReal(){
       show('login');
     }
   });
+  let loginErr=null;
+  try{ await finishKakao(); }catch(e){ loginErr=e; }
   const { data:{ session } } = await sb.auth.getSession();
-  if(!session) return show('login');
+  if(!session){
+    show('login');
+    if(loginErr) toast(String(loginErr.message).includes('access_denied')?'로그인을 취소했어요':'카카오 로그인에 실패했어요. 다시 시도해 주세요');
+    return;
+  }
   await afterAuth(session.user);
 }
 
@@ -790,11 +828,7 @@ async function submitNick(){
 /* ---------- 이벤트 ---------- */
 $('#kakaoBtn').addEventListener('click', async ()=>{
   if(DEMO){ return state.me ? enterMain() : openNick('join'); }
-  const { error } = await state.sb.auth.signInWithOAuth({
-    provider:'kakao',
-    options:{ redirectTo: location.origin + location.pathname }
-  });
-  if(error) toast('카카오 로그인을 열지 못했어요');
+  try{ await kakaoLogin(); }catch{ toast('카카오 로그인을 열지 못했어요'); }
 });
 $('#nickInput').addEventListener('input',validateNick);
 $('#codeInput').addEventListener('input',validateNick);
