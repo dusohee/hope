@@ -278,11 +278,26 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);
 }
-.head-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.head h1{font-family:var(--serif);font-size:20px;font-weight:700;letter-spacing:-.02em}
+.head-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.head h1{font-family:var(--serif);font-size:20px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.round-tag{
+  font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:0;padding:3px 8px;border-radius:999px;
+  color:#ffd9a8;background:rgba(255,190,120,.12);border:1px solid rgba(255,190,120,.35);
+}
+.head-actions{display:flex;align-items:center;gap:6px}
+.hist-btn{
+  display:flex;align-items:center;gap:5px;height:30px;padding:0 11px 0 9px;border-radius:999px;white-space:nowrap;
+  font-size:12.5px;color:#d7d3ee;background:rgba(255,255,255,.06);border:1px solid var(--line);
+}
+.hist-btn b{color:var(--ink)}
+.hist-btn:active{background:rgba(255,255,255,.12)}
+.mini-flame{width:8px;height:12px;filter:drop-shadow(0 0 3px #ffb1cf)}
+.mini-flame svg{display:block;width:100%;height:100%}
 .tally{font-family:var(--serif);font-size:15px;color:var(--mute);white-space:nowrap}
 .tally b{font-size:26px;color:var(--ink);font-weight:700;margin-right:2px}
 .menu-btn{width:36px;height:36px;margin:-8px -8px -8px 0;border-radius:50%;font-size:20px;line-height:1;color:var(--mute)}
+.bar-row{display:flex;align-items:center;gap:12px;margin:8px 0 12px}
+.bar-row .bar{flex:1;margin:0}
 .bar{height:3px;border-radius:3px;background:rgba(255,255,255,.08);margin:12px 0 12px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffb020,#ff5fb0,#6b5ce7,#2ec4c9);transition:width .9s ease}
 .members{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -18px;padding:0 18px}
@@ -354,10 +369,69 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
 @keyframes fadeIn{from{opacity:0}}
 @keyframes popIn{from{opacity:0;transform:scale(.92)}}
 
+/* ---------- 회차 공통 ---------- */
+.badge{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;letter-spacing:0}
+.badge.done{color:#1a1030;background:linear-gradient(90deg,#ffe9a8,#ffc2e0)}
+.badge.live{color:#ffe9a8;background:rgba(255,233,168,.1);border:1px solid rgba(255,233,168,.4)}
+
+/* ---------- ① 100번 완성 화면 ---------- */
+#done{min-height:100vh;min-height:100dvh;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));position:relative}
+.done-top{position:absolute;top:14px;right:18px;z-index:3}
+.done-hero .stage{aspect-ratio:1/.8}
+.done-hero .verse,.done-hero .ref,.done-hero .meta,.done-hero .light-btn{display:none}
+.done-hero.lit .big{color:#fff;text-shadow:0 0 14px rgba(255,226,180,.9),0 0 36px rgba(255,180,110,.6),0 0 70px rgba(255,120,170,.35)}
+.done-body{padding:8px 24px 0;display:flex;flex-direction:column}
+.done-cap{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;font-size:12.5px;color:#c9c4e6}
+.done-title{margin-top:16px;text-align:center;font-family:var(--serif);font-size:24px;line-height:1.45;font-weight:700;letter-spacing:-.02em;word-break:keep-all}
+.done-period{margin-top:8px;text-align:center;font-family:var(--serif);font-size:14px;color:var(--mute)}
+.bars{margin:26px 0 28px;display:flex;flex-direction:column;gap:11px}
+.bar-item{display:grid;grid-template-columns:68px 1fr 30px;align-items:center;gap:10px;font-size:13px}
+.bar-item .bn{color:#d7d3ee;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-item .bt{height:8px;border-radius:8px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar-item .bt i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#ffb020,#ff5fb0,#6b5ce7)}
+.bar-item b{text-align:right;font-family:var(--serif);font-size:15px}
+.done-body .primary{margin-top:0}
+.done-body .ghost{margin-top:6px;color:#c9c4e6}
+
+/* ---------- ② 새 회차 시작 확인 (바텀시트) ---------- */
+.round-sheet{padding:22px 22px calc(18px + env(safe-area-inset-bottom,0px));animation:sheetUp .28s cubic-bezier(.3,1.2,.5,1)}
+.round-sheet .grab{width:36px;height:4px;border-radius:4px;background:rgba(255,255,255,.18);margin:-10px auto 20px}
+.round-sheet h3{font-family:var(--serif);font-size:21px;font-weight:700;letter-spacing:-.02em}
+.round-sheet .rs-body{margin-top:10px;font-size:14.5px;line-height:1.7;color:#c9c4e6;word-break:keep-all}
+.rs-note{
+  margin:16px 0 20px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.6;word-break:keep-all;
+  color:#ffe9a8;background:rgba(255,233,168,.08);border:1px solid rgba(255,233,168,.3);
+}
+.round-sheet .primary{text-align:center;padding:0;border-radius:12px}
+.round-sheet .primary:active{background:linear-gradient(90deg,#ffe9a8,#ffc2e0 55%,#c9b8ff);opacity:.85}
+.round-sheet .ghost{text-align:center;padding:0;font-size:15px;margin-top:4px}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
+
+/* ---------- ④ 지난 기록 · ⑤ N회차 기록 ---------- */
+.sub-head{display:flex;align-items:center;gap:6px}
+.sub-head h2{font-family:var(--serif);font-size:20px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+.sub-head .badge{margin-left:4px}
+.back{width:36px;height:36px;margin:-6px 0 -6px -10px;border-radius:50%;font-size:30px;line-height:1;color:var(--ink);display:flex;align-items:center;justify-content:center}
+.cards{padding:16px 16px 40px;display:flex;flex-direction:column;gap:12px}
+.rcard{
+  display:flex;gap:16px;align-items:center;width:100%;padding:14px;border-radius:16px;text-align:left;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+}
+.rcard.live{border:1.5px dashed rgba(255,233,168,.45);background:rgba(255,233,168,.03)}
+.rcard:active{background:rgba(255,255,255,.08)}
+.thumb{flex:none;display:grid;grid-template-columns:repeat(10,6px);gap:3px;padding:10px;border-radius:10px;background:#07071a}
+.thumb i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.1)}
+.rinfo{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.rinfo .rn{font-family:var(--serif);font-size:20px;font-weight:700;margin-top:4px}
+.rinfo .rp{font-size:13px;color:#c9c4e6}
+.rinfo .rm{font-size:12px;color:var(--mute)}
+.rec-sum{margin:10px 0 12px;font-family:var(--serif);font-size:14px;color:var(--mute)}
+.readonly .light-btn{display:none!important}
+
 .loading{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:var(--night);font-family:var(--serif);color:var(--mute);text-align:center;line-height:1.8;padding:0 28px}
 
 @media (prefers-reduced-motion:reduce){
-  .flame svg,.cell.next .candle,.cell.igniting .halo,.finale.next .cluster,.modal-wrap,.modal{animation:none}
+  .flame svg,.cell.next .candle,.cell.igniting .halo,.finale.next .cluster,.modal-wrap,.modal,.round-sheet{animation:none}
   *{transition-duration:.01ms!important}
 }
 </style>
@@ -403,23 +477,60 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
     </div>
   </section>
 
-  <!-- 메인 -->
+  <div class="demo-bar" id="demoBar" hidden><span id="demoBarText">데모 모드 · 하루 한 번 제한 없이 눌러볼 수 있어요</span><button id="tourExit" hidden>나가기</button></div>
+
+  <!-- ③ 메인 (진행 중인 회차) -->
   <section id="main" hidden>
-    <div class="demo-bar" id="demoBar" hidden><span id="demoBarText">데모 모드 · 하루 한 번 제한 없이 눌러볼 수 있어요</span><button id="tourExit" hidden>나가기</button></div>
     <header class="head">
       <div class="head-row">
-        <h1>100번 새벽기도</h1>
-        <div style="display:flex;align-items:baseline;gap:10px">
-          <span class="tally"><b id="count">0</b>/ <span id="goal">100</span></span>
+        <h1>100번 새벽기도<span class="round-tag" id="roundTag" hidden></span></h1>
+        <div class="head-actions">
+          <button class="hist-btn" id="histBtn" hidden><span class="mini-flame"></span>지난 기록 <b id="histCount">0</b></button>
           <button class="menu-btn" id="menuBtn" aria-label="메뉴">⋯</button>
         </div>
       </div>
-      <div class="bar"><i id="barFill"></i></div>
+      <div class="bar-row">
+        <div class="bar"><i id="barFill"></i></div>
+        <span class="tally"><b id="count">0</b>/ <span id="goal">100</span></span>
+      </div>
       <div class="members" id="members"></div>
       <div class="done-banner" id="doneBanner" hidden></div>
     </header>
     <div class="grid" id="grid"></div>
     <p class="foot">한 사람이 하루에 한 번 켤 수 있어요.<br>촛불은 1번부터 차례로 밝혀져요.</p>
+  </section>
+
+  <!-- ① 100번 완성 -->
+  <section class="sky" id="done" hidden>
+    <div class="done-top"><button class="menu-btn" id="doneMenuBtn" aria-label="메뉴">⋯</button></div>
+    <div id="doneHero"></div>
+    <div class="done-body">
+      <p class="done-cap"><span class="badge done" id="doneBadge"></span><span id="doneLast"></span></p>
+      <h2 class="done-title" id="doneTitle"></h2>
+      <p class="done-period" id="donePeriod"></p>
+      <div class="bars" id="doneBars"></div>
+      <button class="primary" id="newRoundBtn"></button>
+      <button class="ghost" id="reviewBtn"></button>
+    </div>
+  </section>
+
+  <!-- ④ 지난 기록 -->
+  <section id="history" hidden>
+    <header class="head">
+      <div class="sub-head"><button class="back" id="histBack" aria-label="뒤로">‹</button><h2>지난 기록</h2></div>
+    </header>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- ⑤ N회차 기록 (읽기 전용) -->
+  <section id="record" hidden>
+    <header class="head">
+      <div class="sub-head"><button class="back" id="recBack" aria-label="뒤로">‹</button><h2 id="recTitle"></h2><span class="badge done" id="recBadge">완성</span></div>
+      <p class="rec-sum" id="recSum"></p>
+      <div class="members" id="recMembers"></div>
+    </header>
+    <div class="grid readonly" id="recGrid"></div>
+    <p class="foot" id="recFoot"></p>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -433,6 +544,17 @@ h1.title{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.2
         <button class="m-no" id="confirmNo">아니오</button>
         <button class="m-yes" id="confirmYes">예</button>
       </div>
+    </div>
+  </div>
+
+  <div class="sheet-wrap" id="roundSheet" hidden>
+    <div class="sheet round-sheet" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+      <div class="grab"></div>
+      <h3 id="rsTitle"></h3>
+      <p class="rs-body" id="rsBody"></p>
+      <div class="rs-note" id="rsNote"></div>
+      <button class="primary" id="rsYes"></button>
+      <button class="ghost" id="rsNo">취소</button>
     </div>
   </div>
 
@@ -510,7 +632,14 @@ const FINALE_CANDLES = [
 ];
 
 const $ = s => document.querySelector(s);
-const state = { me:null, profiles:{}, prayers:[], sb:null, channel:null, nickMode:'join' };
+/* rounds: 회차 목록(번호 순). 마지막 회차가 "현재 회차" — 진행 중이거나, 방금 완성됐고 다음 회차가 아직 없는 상태
+   prayers: 현재 회차의 촛불만 / archive: 지난 회차의 촛불 (회차 id → 배열) / todayUsers: 오늘 켠 사람 (회차 상관없이) */
+const state = {
+  me:null, profiles:{}, rounds:[], prayers:[], archive:{}, todayUsers:new Set(),
+  sb:null, channel:null, nickMode:'join', view:null, recordFrom:'history', recordId:null
+};
+const cur = () => state.rounds[state.rounds.length-1] || null;
+const isDone = () => { const r=cur(); return !!r && (!!r.completed_on || state.prayers.length>=GOAL); };
 
 /* ---------- 유틸 ---------- */
 function todayKST(){ return new Date(Date.now() + 9*3600e3).toISOString().slice(0,10); }
@@ -520,10 +649,29 @@ function fmtDate(iso){
   const w = '일월화수목금토'[new Date(Date.UTC(y,m-1,d)).getUTCDay()];
   return `${m}.${d} (${w})`;
 }
+function fmtFull(iso){ const [y,m,d]=iso.split('-').map(Number); return `${y}.${m}.${d}`; }
+// 2026.10.26 – 11.23 (해가 바뀌면 끝 날짜에도 연도)
+function fmtPeriod(a,b){
+  if(!b) return `${fmtFull(a)} –`;
+  const [ya]=a.split('-'), [yb,m,d]=b.split('-').map(Number);
+  return `${fmtFull(a)} – ${String(yb)===ya ? `${m}.${d}` : fmtFull(b)}`;
+}
+// 시작일부터 끝(진행 중이면 오늘)까지, 양 끝 포함
+function roundDays(start,end){ return Math.round((Date.parse(end||todayKST())-Date.parse(start))/864e5)+1; }
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function nick(id){ return state.profiles[id]?.nickname || '가족'; }
+function tallyOf(prs){
+  const t={}; prs.forEach(p=>t[p.user_id]=(t[p.user_id]||0)+1);
+  return Object.entries(t).map(([id,n])=>({id,n})).sort((a,b)=>b.n-a.n);
+}
 let toastTimer;
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600); }
-function show(id){ ['login','nick','main'].forEach(s=>$('#'+s).hidden = s!==id); $('#loading').hidden=true; }
+const VIEWS=['login','nick','main','done','history','record'];
+function show(id){
+  VIEWS.forEach(s=>$('#'+s).hidden = s!==id); $('#loading').hidden=true;
+  state.view=id;
+  $('#demoBar').hidden = !DEMO || id==='login' || id==='nick';
+}
 
 /* ---------- 밤하늘 · 결 텍스처 ---------- */
 function makeTextures(){
@@ -553,7 +701,7 @@ function makeTextures(){
 
 /* ---------- 촛불 마크업 ---------- */
 const FLAME = '<svg viewBox="0 0 20 30" aria-hidden="true"><path fill="#fff" d="M10 0C10 0 20 13.5 20 20a10 10 0 0 1-20 0C0 13.5 10 0 10 0z"/></svg>';
-function finaleHTML(slot){
+function finaleHTML(slot,pre='c'){
   const candles = FINALE_CANDLES.map((f,i)=>{
     const p=FINALE_PALETTE[f.c];
     return `<div class="fc" style="--x:${f.x}%;--w:${f.w}%;--h:${f.h}%;--b:${f.b}%;--g:linear-gradient(180deg,${p.join(',')});--glow:${p[1]};--d:${(i*.13).toFixed(2)}s;--fd:-${(i%5)*.43}s;z-index:${i<5?1:2}">
@@ -561,7 +709,7 @@ function finaleHTML(slot){
       <div class="fbody"><div class="color"></div><div class="cap"></div><div class="drip" style="--dl:${f.dl}%;--dx:${f.dx}%"></div></div>
     </div>`;
   }).join('');
-  return `<div class="cell sky finale" id="c${slot}" style="--sx:-40px;--sy:-90px">
+  return `<div class="cell sky finale" id="${pre}${slot}" style="--sx:-40px;--sy:-90px">
     <div class="stage">
       <div class="cluster">${candles}</div>
       <div class="water" style="--base:#ff9cb8;width:96%;height:7%;bottom:0"></div>
@@ -576,12 +724,12 @@ function finaleHTML(slot){
   </div>`;
 }
 
-function candleHTML(slot){
-  if(slot===GOAL) return finaleHTML(slot);
+function candleHTML(slot,pre='c'){
+  if(slot===GOAL) return finaleHTML(slot,pre);
   const p = PALETTE[(slot-1)%PALETTE.length];
   const h = 50 + ((slot*37)%6)*3.5;            // 50% ~ 67.5% 높이 변화
   const sx = -((slot*83)%260), sy = -((slot*131)%260);
-  return `<div class="cell sky" id="c${slot}" style="--g:linear-gradient(180deg,${p.join(',')});--glow:${p[1]};--base:${p[3]};--h:${h}%;--fd:-${(slot%7)*.37}s;--sx:${sx}px;--sy:${sy}px">
+  return `<div class="cell sky" id="${pre}${slot}" style="--g:linear-gradient(180deg,${p.join(',')});--glow:${p[1]};--base:${p[3]};--h:${h}%;--fd:-${(slot%7)*.37}s;--sx:${sx}px;--sy:${sy}px">
     <div class="stage">
       <div class="halo"></div>
       <div class="candle"><div class="wick"></div><div class="flame">${FLAME}</div><div class="body"><div class="color"></div></div></div>
@@ -592,67 +740,90 @@ function candleHTML(slot){
   </div>`;
 }
 
+// 불꽃 흔들림은 화면 근처 칸만 (100개가 동시에 돌면 구형 폰이 버거워요)
+const io = 'IntersectionObserver' in window
+  ? new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('vis',e.isIntersecting)),{rootMargin:'150px 0px'})
+  : null;
+function observeCells(root){ root.querySelectorAll('.cell').forEach(c=> io ? io.observe(c) : c.classList.add('vis')); }
+
+function gridHTML(pre){ let html=''; for(let s=1;s<=GOAL;s++) html+=candleHTML(s,pre); return html; }
+
 function buildGrid(){
-  let html=''; for(let s=1;s<=GOAL;s++) html+=candleHTML(s);
-  $('#grid').innerHTML=html;
+  $('#grid').innerHTML=gridHTML('c');
+  observeCells($('#grid'));
   $('#heroCandle').innerHTML=candleHTML(5); // 로그인 화면의 대표 촛불
   const hero=$('#heroCandle .cell'); hero.id=''; hero.classList.add('lit','vis'); hero.classList.remove('sky');
   hero.querySelector('.light-btn').remove();
 
-  // 불꽃 흔들림은 화면 근처 칸만 (100개가 동시에 돌면 구형 폰이 버거워요)
-  const cells=document.querySelectorAll('#grid .cell');
-  if('IntersectionObserver' in window){
-    const io=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('vis',e.isIntersecting)),{rootMargin:'150px 0px'});
-    cells.forEach(c=>io.observe(c));
-  }else cells.forEach(c=>c.classList.add('vis'));
-
   $('#goal').textContent=GOAL;
   $('#doneBanner').innerHTML=`${GOAL}번의 새벽기도를 함께 채웠어요.<br>모두 수고 많으셨어요 🕯️`;
+  $('#doneTitle').innerHTML=`${GOAL}번의 새벽기도를<br>함께 채웠어요`;
+  $('#newRoundBtn').textContent=`새로운 ${GOAL}번 시작하기`;
+  $('#recFoot').innerHTML=`지나간 회차의 기록이에요.<br>촛불 ${GOAL}개가 모두 밝혀졌어요.`;
+  $('#histBtn .mini-flame').innerHTML=FLAME;
 }
 
-/* ---------- 렌더 ---------- */
-function litToday(){ return state.prayers.some(p=>p.user_id===state.me?.id && p.prayed_on===todayKST()); }
+// 칸 하나에 켜진 기록을 그리기 (메인 · 기록 보기 공용)
+function paintCell(el,p){
+  el.classList.toggle('lit',!!p);
+  el.classList.toggle('mine',!!p && p.user_id===state.me?.id);
+  if(p){
+    el.querySelector('.date').textContent=fmtDate(p.prayed_on);
+    el.querySelector('.who').textContent=nick(p.user_id);
+  }
+}
+
+function chipsHTML(prs,{today}={}){
+  const tally={}; prs.forEach(p=>tally[p.user_id]=(tally[p.user_id]||0)+1);
+  return Object.values(state.profiles)
+    .filter(m=>!today ? tally[m.id] : true)       // 기록 보기에선 그 회차에 켠 사람만
+    .sort((a,b)=>(b.id===state.me?.id)-(a.id===state.me?.id) || (tally[b.id]||0)-(tally[a.id]||0))
+    .map(m=>`<span class="chip${m.id===state.me?.id?' me':''}${today?.has(m.id)?' today':''}">${today?'<i class="dot"></i>':''}${esc(m.nickname)} <b>${tally[m.id]||0}</b></span>`)
+    .join('');
+}
+
+/* ---------- ③ 메인 렌더 ---------- */
+function litToday(){ return state.todayUsers.has(state.me?.id); }
+function todaySet(){
+  if(!DEMO) return state.todayUsers;
+  const t=todayKST(); return new Set(demoAll().filter(p=>p.prayed_on===t).map(p=>p.user_id));
+}
 
 function render(){
   const bySlot={}; state.prayers.forEach(p=>bySlot[p.slot]=p);
   const count=state.prayers.length, next=count+1;
-  const blocked = !DEMO && litToday();
+  const blocked = !DEMO && litToday();   // 하루 1번은 회차와 상관없이
 
   for(let s=1;s<=GOAL;s++){
     const el=document.getElementById('c'+s); if(!el) continue;
     const p=bySlot[s];
-    el.classList.toggle('lit',!!p);
-    el.classList.toggle('next',!p && s===next);
-    el.classList.toggle('mine',!!p && p.user_id===state.me?.id);
-    if(p){
-      el.querySelector('.date').textContent=fmtDate(p.prayed_on);
-      el.querySelector('.who').textContent=state.profiles[p.user_id]?.nickname || '가족';
-    }
+    paintCell(el,p);
+    el.classList.toggle('next',!p && s===next && !!cur());
     if(!p && s===next){
       const b=el.querySelector('.light-btn');
       b.disabled=blocked; b.textContent=blocked?'오늘은 켰어요':s===GOAL?'마지막 촛불 켜기':'기도 켜기';
     }
   }
 
+  const r=cur();
+  $('#roundTag').hidden = !(r && r.number>=2);
+  if(r) $('#roundTag').textContent=`${r.number}회차`;
+  const doneN=state.rounds.filter(x=>x.completed_on).length;
+  $('#histBtn').hidden = doneN===0;
+  $('#histCount').textContent=doneN;
+  $('#histBtn').setAttribute('aria-label',`지난 기록 ${doneN}개`);
+
   $('#count').textContent=count;
   $('#barFill').style.width=Math.min(100,count/GOAL*100)+'%';
   $('#doneBanner').hidden = count<GOAL;
   setDaylight(count);
-
-  const tally={}; state.prayers.forEach(p=>tally[p.user_id]=(tally[p.user_id]||0)+1);
-  const today=todayKST();
-  const todaySet=new Set(state.prayers.filter(p=>p.prayed_on===today).map(p=>p.user_id));
-  const list=Object.values(state.profiles).sort((a,b)=>
-    (b.id===state.me?.id)-(a.id===state.me?.id) || (tally[b.id]||0)-(tally[a.id]||0));
-  $('#members').innerHTML=list.map(m=>
-    `<span class="chip${m.id===state.me?.id?' me':''}${todaySet.has(m.id)?' today':''}"><i class="dot"></i>${esc(m.nickname)} <b>${tally[m.id]||0}</b></span>`
-  ).join('');
+  $('#members').innerHTML=chipsHTML(state.prayers,{today:todaySet()});
 }
 
 // 방금 100번째가 켜졌으면 밤에 다 켜진 촛불을 잠깐 보여준 뒤 낮으로, 이미 완성된 상태로 열면 바로 낮으로
-let lastCount=null, dayTimer=null;
+let lastCount=null, dayTimer=null, doneTimer=null;
 function setDaylight(count){
-  const cl=document.body.classList, justDone=lastCount!==null && lastCount<GOAL;
+  const cl=$('#main').classList, justDone=lastCount!==null && lastCount<GOAL;
   lastCount=count;
   if(count<GOAL){ clearTimeout(dayTimer); dayTimer=null; cl.remove('daylight'); return; }
   if(cl.contains('daylight') || dayTimer) return;
@@ -661,8 +832,12 @@ function setDaylight(count){
 }
 
 function addPrayer(row){
-  if(!row || state.prayers.some(p=>p.slot===row.slot)) return false;
+  if(!row) return false;
+  if(row.prayed_on===todayKST()) state.todayUsers.add(row.user_id);
+  if(String(row.round_id)!==String(cur()?.id) || state.prayers.some(p=>p.slot===row.slot)) return false;
   state.prayers.push(row); state.prayers.sort((a,b)=>a.slot-b.slot);
+  // 100번째가 들어가는 순간 서버도 회차를 완성 처리해요 (rounds UPDATE보다 먼저 와도 맞게)
+  if(state.prayers.length>=GOAL && !cur().completed_on) cur().completed_on=row.prayed_on;
   render(); return true;
 }
 
@@ -670,12 +845,166 @@ function ignite(slot){
   const el=document.getElementById('c'+slot); if(!el) return;
   el.classList.remove('igniting'); void el.offsetWidth; el.classList.add('igniting');
   setTimeout(()=>el.classList.remove('igniting'),1500);
-  if(state.prayers.length===GOAL) setTimeout(()=>toast(`${GOAL}번째 촛불이 켜졌어요. 함께 해냈어요 🕯️`),900);
+  if(state.prayers.length===GOAL){
+    setTimeout(()=>toast(`${GOAL}번째 촛불이 켜졌어요. 함께 해냈어요 🕯️`),900);
+    // 밤 → 낮 하늘을 다 보여준 뒤 완성 화면으로
+    clearTimeout(doneTimer);
+    doneTimer=setTimeout(()=>{ doneTimer=null; if(state.view==='main' && isDone()) showDone(); },7500);
+  }
 }
 
 function scrollToNext(){
   const el=document.getElementById('c'+Math.min(GOAL,state.prayers.length+1));
   if(el && state.prayers.length>3) el.scrollIntoView({block:'center'});
+  else window.scrollTo(0,0);
+}
+
+/* ---------- 화면 이동 ---------- */
+// 현재 회차가 완성됐으면 ① 완성 화면, 아니면 ③ 메인
+function goHome(){
+  if(isDone()) return showDone();
+  show('main'); render();
+  requestAnimationFrame(scrollToNext);
+}
+
+// 데이터가 바뀐 뒤 지금 보고 있는 화면을 맞춰줌
+function syncView(){
+  const v=state.view;
+  if(v==='main'){ if(isDone() && !doneTimer) showDone(); else render(); }
+  else if(v==='done'){
+    if(isDone()) renderDone();
+    else{   // 앱을 쉬는 동안 누군가 새 회차를 시작함
+      const r=cur(); goHome();
+      if(r.started_by!==state.me?.id) toast(`${nick(r.started_by)}님이 ${r.number}회차를 시작했어요`);
+    }
+  }
+  else if(v==='history') renderHistory();
+  else if(v==='record') renderRecord();
+}
+
+/* ---------- ① 100번 완성 화면 ---------- */
+function renderDone(){
+  const r=cur(); if(!r) return;
+  const prs=state.prayers, last=prs[prs.length-1];
+  const end=r.completed_on || last?.prayed_on;
+  $('#doneBadge').textContent=`${r.number}회차 완성`;
+  $('#doneLast').textContent= last ? `${GOAL}번째 촛불 · ${fmtDate(last.prayed_on)} ${nick(last.user_id)}` : '';
+  $('#donePeriod').textContent=`${fmtPeriod(r.started_on,end)} · ${roundDays(r.started_on,end)}일 동안`;
+  const t=tallyOf(prs), max=t[0]?.n||1;
+  $('#doneBars').innerHTML=t.map(x=>
+    `<div class="bar-item"><span class="bn">${esc(nick(x.id))}</span><span class="bt"><i style="width:${(x.n/max*100).toFixed(1)}%"></i></span><b>${x.n}</b></div>`
+  ).join('');
+  $('#reviewBtn').textContent=`${r.number}회차 기록 다시 보기`;
+}
+
+function showDone(){
+  clearTimeout(doneTimer); doneTimer=null;
+  renderDone(); show('done'); window.scrollTo(0,0);
+  // 100번째 칸 디자인을 크게, 촛불이 하나씩 켜지게
+  const box=$('#doneHero'); box.innerHTML=finaleHTML(GOAL,'h');
+  const el=box.firstElementChild; el.removeAttribute('id'); el.classList.remove('sky'); el.classList.add('done-hero','vis');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('lit')));
+}
+
+/* ---------- ② 새 회차 시작 ---------- */
+function openRoundSheet(){
+  const n=(cur()?.number||0)+1;
+  $('#rsTitle').textContent=`${n}회차를 시작할까요?`;
+  $('#rsBody').textContent=`${n-1}회차의 촛불 ${GOAL}개는 지난 기록에 그대로 보관돼요. 새 회차는 가족 모두에게 함께 시작돼요.`;
+  $('#rsNote').textContent=`오늘 이미 촛불을 켠 사람은 ${n}회차 첫 촛불을 내일부터 켤 수 있어요.`;
+  $('#rsYes').textContent=`${n}회차 시작하기`;
+  $('#rsYes').disabled=false;
+  $('#roundSheet').hidden=false;
+}
+function closeRoundSheet(){ $('#roundSheet').hidden=true; }
+
+// 새 회차를 상태에 반영 (내가 시작했든, 실시간으로 받았든 한 번만)
+function applyNewRound(row){
+  if(!row || state.rounds.some(r=>String(r.id)===String(row.id))) return false;
+  const old=cur();
+  if(old && row.number<=old.number){ state.rounds.push(row); state.rounds.sort((a,b)=>a.number-b.number); return true; }
+  if(old && state.prayers.length) state.archive[old.id]=state.prayers;   // 지난 회차로 보관
+  state.rounds.push(row);
+  state.prayers=[]; lastCount=null;
+  clearTimeout(doneTimer); doneTimer=null;
+  return true;
+}
+
+// 다른 가족이 새 회차를 시작했을 때 화면 전환
+function afterRoundSwitch(){
+  closeRoundSheet();
+  const v=state.view;
+  if(v==='main' || v==='done'){ show('main'); render(); window.scrollTo(0,0); }
+  else if(v==='history') renderHistory();
+}
+
+async function startRound(){
+  const row = DEMO ? demoStartRound() : await realStartRound();
+  applyNewRound(row);
+  if(DEMO) demoWrite();
+  return row;
+}
+
+/* ---------- ④ 지난 기록 ---------- */
+const DOT_STYLE = PALETTE.map(p=>`background:linear-gradient(180deg,${p[0]},${p[2]});box-shadow:0 0 4px ${p[1]}`);
+function prayersOf(id){ return String(id)===String(cur()?.id) ? state.prayers : state.archive[id]; }
+
+// 지난 회차의 촛불을 아직 안 불러왔으면 한 번에 불러옴 (완성된 회차는 바뀌지 않아서 캐시)
+async function ensureArchive(){
+  if(DEMO) return;
+  const missing=state.rounds.filter(r=>String(r.id)!==String(cur()?.id) && !state.archive[r.id]).map(r=>r.id);
+  if(!missing.length) return;
+  const { data, error } = await state.sb.from('prayers').select(PRAYER_COLS).in('round_id',missing).order('slot');
+  if(error) throw error;
+  missing.forEach(id=>state.archive[id]=[]);
+  (data||[]).forEach(p=>state.archive[p.round_id]?.push(p));
+}
+
+function renderHistory(){
+  $('#cards').innerHTML = state.rounds.slice().reverse().map(r=>{
+    const live=!r.completed_on;
+    const prs=prayersOf(r.id);
+    const n = live ? (prs?.length||0) : GOAL;
+    const fam = prs ? new Set(prs.map(p=>p.user_id)).size : null;
+    const days = roundDays(r.started_on, r.completed_on);
+    let dots=''; for(let s=1;s<=GOAL;s++) dots += s<=n ? `<i style="${DOT_STYLE[(s-1)%PALETTE.length]}"></i>` : '<i></i>';
+    return `<button class="rcard${live?' live':''}" data-round="${r.id}">
+      <span class="thumb" aria-hidden="true">${dots}</span>
+      <span class="rinfo">
+        <span class="badge ${live?'live':'done'}">${live?'진행 중':'완성'}</span>
+        <span class="rn">${r.number}회차</span>
+        <span class="rp">${fmtPeriod(r.started_on, r.completed_on)}</span>
+        <span class="rm">${live?`${days}일째 · ${n} / ${GOAL}`:`${days}일 동안`}${fam!==null?` · 가족 ${fam}명`:''}</span>
+      </span>
+    </button>`;
+  }).join('');
+}
+
+async function openHistory(){
+  show('history'); window.scrollTo(0,0); renderHistory();
+  try{ await ensureArchive(); if(state.view==='history') renderHistory(); }
+  catch{ toast('지난 기록을 불러오지 못했어요'); }
+}
+
+/* ---------- ⑤ N회차 기록 ---------- */
+function renderRecord(){
+  const r=state.rounds.find(x=>String(x.id)===String(state.recordId)); if(!r) return;
+  const prs=prayersOf(r.id)||[];
+  const end=r.completed_on || prs[prs.length-1]?.prayed_on;
+  $('#recTitle').textContent=`${r.number}회차 기록`;
+  $('#recBadge').hidden=!r.completed_on;
+  $('#recSum').textContent=`${fmtPeriod(r.started_on,end)} · ${roundDays(r.started_on,end)}일 동안`;
+  $('#recMembers').innerHTML=chipsHTML(prs);
+  const bySlot={}; prs.forEach(p=>bySlot[p.slot]=p);
+  for(let s=1;s<=GOAL;s++){ const el=document.getElementById('r'+s); if(el) paintCell(el,bySlot[s]); }
+}
+
+async function openRecord(id,from){
+  state.recordId=id; state.recordFrom=from;
+  if(!$('#recGrid').childElementCount){ $('#recGrid').innerHTML=gridHTML('r'); observeCells($('#recGrid')); }
+  renderRecord(); show('record'); window.scrollTo(0,0);
+  try{ await ensureArchive(); if(state.view==='record') renderRecord(); }
+  catch{ toast('기록을 불러오지 못했어요'); }
 }
 
 /* ---------- 기도 켜기 ---------- */
@@ -691,8 +1020,7 @@ async function lightCandle(btn){
         : m.includes('completed')?`${GOAL}개의 촛불이 모두 켜졌어요`
         : m.includes('not_member')?'가족 등록이 필요해요. 다시 로그인해 주세요'
         : '연결이 불안정해요. 잠시 후 다시 눌러 주세요');
-    if(!DEMO){ try{ await loadAll(); }catch{} }
-    render();
+    if(DEMO) render(); else await refresh();
   }
 }
 
@@ -734,13 +1062,20 @@ async function finishKakao(){
   const { error:e2 } = await state.sb.auth.signInWithIdToken({ provider:'kakao', token:data.id_token, nonce:saved.nonce });
   if(e2) throw e2;
 }
+
+function resetState(){
+  state.me=null; state.profiles={}; state.rounds=[]; state.prayers=[]; state.archive={}; state.todayUsers=new Set();
+  clearTimeout(doneTimer); doneTimer=null; lastCount=null;
+  $('#main').classList.remove('daylight');
+}
+
 async function initReal(){
   $('#tourBtn').hidden=false;   // 가족이 아닌 사람도 로그인 없이 체험할 수 있게
   if(!window.supabase) throw new Error('supabase_lib');
   const sb = state.sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { auth:{ detectSessionInUrl:false } });
   sb.auth.onAuthStateChange((ev)=>{
     if(ev==='SIGNED_OUT'){
-      state.me=null; state.profiles={}; state.prayers=[];
+      resetState();
       if(state.channel){ sb.removeChannel(state.channel); state.channel=null; }
       show('login');
     }
@@ -771,28 +1106,58 @@ async function afterAuth(user){
   await enterMain();
 }
 
-async function loadAll(){
-  const [{data:profs,error:e1},{data:prs,error:e2}] = await Promise.all([
-    state.sb.from('profiles').select('id,nickname'),
-    state.sb.from('prayers').select('id,slot,user_id,prayed_on').order('slot')
-  ]);
-  if(e1||e2) throw (e1||e2);
-  state.profiles=Object.fromEntries((profs||[]).map(p=>[p.id,p]));
-  state.prayers=prs||[];
+const PRAYER_COLS='id,round_id,slot,user_id,prayed_on';
+async function loadProfiles(){
+  const { data, error } = await state.sb.from('profiles').select('id,nickname');
+  if(error) throw error;
+  state.profiles=Object.fromEntries((data||[]).map(p=>[p.id,p]));
   if(state.me && state.profiles[state.me.id]) state.me.nickname=state.profiles[state.me.id].nickname;
 }
+// 회차 전체 + 현재 회차의 촛불 + 오늘 켠 사람(회차 상관없이)
+async function loadAll(){
+  const sb=state.sb;
+  const [, {data:rds,error:e1}, {data:tod,error:e2}] = await Promise.all([
+    loadProfiles(),
+    sb.from('rounds').select('id,number,started_on,completed_on,started_by').order('number'),
+    sb.from('prayers').select('user_id').eq('prayed_on',todayKST())
+  ]);
+  if(e1||e2) throw (e1||e2);
+  const last=rds?.[rds.length-1];
+  let prs=[];
+  if(last){
+    const { data, error } = await sb.from('prayers').select(PRAYER_COLS).eq('round_id',last.id).order('slot');
+    if(error) throw error;
+    prs=data||[];
+  }
+  state.rounds=rds||[]; state.prayers=prs;
+  state.todayUsers=new Set((tod||[]).map(p=>p.user_id));
+}
 
-async function refresh(){ try{ await loadAll(); render(); }catch{} }
+async function refresh(){ try{ await loadAll(); syncView(); }catch{} }
 
 let visHooked=false;
 function subscribe(){
   if(state.channel) return;
   state.channel = state.sb.channel('hope-family')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'prayers'}, async ({new:row})=>{
-      if(!state.profiles[row.user_id]){ try{ await loadAll(); }catch{} }
+      if(String(row.round_id)!==String(cur()?.id)){ if(row.prayed_on===todayKST()) state.todayUsers.add(row.user_id); return refresh(); }
+      if(!state.profiles[row.user_id]){ try{ await loadProfiles(); }catch{} }
       if(addPrayer(row)){
         ignite(row.slot);
-        if(row.user_id!==state.me?.id) toast(`${state.profiles[row.user_id]?.nickname||'가족'}님이 촛불을 켰어요 🕯️`);
+        if(row.user_id!==state.me?.id) toast(`${nick(row.user_id)}님이 촛불을 켰어요 🕯️`);
+        if(state.view==='history') renderHistory();
+      }
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'rounds'}, ({eventType,new:row})=>{
+      if(eventType==='INSERT'){
+        if(!applyNewRound(row)) return;
+        if(String(row.id)!==String(cur()?.id)) return;
+        afterRoundSwitch();
+        if(row.started_by!==state.me?.id) toast(`${nick(row.started_by)}님이 ${row.number}회차를 시작했어요 🕯️`);
+      }else if(eventType==='UPDATE'){
+        const r=state.rounds.find(x=>String(x.id)===String(row.id));
+        if(r) Object.assign(r,row);
+        if(state.view==='history') renderHistory();
       }
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'profiles'}, refresh)
@@ -800,12 +1165,17 @@ function subscribe(){
   if(visHooked) return; visHooked=true;
   // 모바일에서 앱을 다시 열 때 최신 상태로 맞춤
   document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState==='visible' && state.me && !$('#main').hidden) refresh();
+    if(document.visibilityState==='visible' && state.me && !DEMO && ['main','done','history','record'].includes(state.view)) refresh();
   });
 }
 
 async function realLight(){
   const { data, error } = await state.sb.rpc('light_candle');
+  if(error) throw error;
+  return Array.isArray(data)?data[0]:data;
+}
+async function realStartRound(){
+  const { data, error } = await state.sb.rpc('start_round');
   if(error) throw error;
   return Array.isArray(data)?data[0]:data;
 }
@@ -816,60 +1186,83 @@ async function realLight(){
 const DEMO_KEY='hope-100-demo-v1';
 const TOUR_KEY='hope-100-tour-v1';
 const demoKey=()=>TOUR?TOUR_KEY:DEMO_KEY;
-function demoRead(){ try{ return JSON.parse(localStorage.getItem(demoKey())||'null'); }catch{ return null; } }
-function demoWrite(){ try{ localStorage.setItem(demoKey(), JSON.stringify({me:state.me,profiles:state.profiles,prayers:state.prayers})); }catch{} }
+function demoRead(){
+  let d=null; try{ d=JSON.parse(localStorage.getItem(demoKey())||'null'); }catch{}
+  if(d && !Array.isArray(d.rounds)){   // 회차 기능 전에 저장된 데이터 → 1회차로
+    const ds=d.prayers.map(p=>p.prayed_on).sort();
+    d.rounds=[{id:1,number:1,started_on:ds[0]||todayKST(),completed_on:d.prayers.length>=GOAL?ds[ds.length-1]:null,started_by:null}];
+    d.prayers.forEach(p=>p.round_id=1);
+  }
+  return d;
+}
+function demoAll(){ return [...Object.values(state.archive).flat(), ...state.prayers]; }
+function demoWrite(){
+  try{ localStorage.setItem(demoKey(), JSON.stringify({me:state.me,profiles:state.profiles,rounds:state.rounds,prayers:demoAll()})); }catch{}
+}
+function demoLoad(d){
+  state.me=d.me; state.profiles=d.profiles;
+  state.rounds=d.rounds.slice().sort((a,b)=>a.number-b.number);
+  const c=cur(); state.prayers=[]; state.archive={};
+  d.prayers.forEach(p=> String(p.round_id)===String(c?.id) ? state.prayers.push(p) : (state.archive[p.round_id] ||= []).push(p));
+  state.prayers.sort((a,b)=>a.slot-b.slot);
+  state.todayUsers=new Set();
+  lastCount=null; clearTimeout(doneTimer); doneTimer=null;
+}
 function demoSeed(){
   const fam=[['u-mom','엄마'],['u-dad','아빠'],['u-bro','오빠'],['u-sis','언니'],['u-grand','할머니']];
   const profiles={}; fam.forEach(([id,nickname])=>profiles[id]={id,nickname});
   const prayers=[]; let slot=1;
   for(let d=4; d>=1; d--){
-    fam.forEach(([id],i)=>{ if((d+i)%3!==0) prayers.push({id:'d'+slot,slot:slot++,user_id:id,prayed_on:addDays(todayKST(),-d)}); });
+    fam.forEach(([id],i)=>{ if((d+i)%3!==0) prayers.push({id:'d'+slot,round_id:1,slot:slot++,user_id:id,prayed_on:addDays(todayKST(),-d)}); });
   }
-  return {me:null,profiles,prayers};
+  const rounds=[{id:1,number:1,started_on:addDays(todayKST(),-4),completed_on:null,started_by:null}];
+  return {me:null,profiles,rounds,prayers};
 }
 function initDemo(){
-  const d=demoRead()||demoSeed();
-  state.me=d.me; state.profiles=d.profiles; state.prayers=d.prayers;
-  $('#demoNote').hidden=false; $('#demoBar').hidden=false; $('#resetDemoBtn').hidden=false; $('#fillDemoBtn').hidden=false;
+  demoLoad(demoRead()||demoSeed());
+  $('#demoNote').hidden=false; $('#resetDemoBtn').hidden=false; $('#fillDemoBtn').hidden=false;
   $('#codeField').hidden=true;
   show('login');
 }
 function demoLight(){
-  if(state.prayers.length>=GOAL) throw new Error('completed');
-  const row={id:'d'+Date.now(),slot:state.prayers.length+1,user_id:state.me.id,prayed_on:todayKST()};
+  const r=cur();
+  if(!r || r.completed_on || state.prayers.length>=GOAL) throw new Error('completed');
+  const row={id:'d'+Date.now(),round_id:r.id,slot:state.prayers.length+1,user_id:state.me.id,prayed_on:todayKST()};
   setTimeout(demoWrite,0);
   return row;
+}
+function demoStartRound(){
+  const last=cur();
+  if(last && !last.completed_on) throw new Error('round_in_progress');
+  return {id:(last?.id||0)+1,number:(last?.number||0)+1,started_on:todayKST(),completed_on:null,started_by:state.me?.id||null};
 }
 
 /* ---------- 둘러보기 (실서비스에서 로그인 없이 체험) ---------- */
 function startTour(){
   DEMO=true; TOUR=true;
-  const d=demoRead()||demoSeed();
-  state.profiles=d.profiles; state.prayers=d.prayers;
-  state.me=d.me||{id:'u-me',nickname:'나'};
+  demoLoad(demoRead()||demoSeed());
+  state.me=state.me||{id:'u-me',nickname:'나'};
   state.profiles[state.me.id]={id:state.me.id,nickname:state.me.nickname};
   demoWrite();
   $('#demoBarText').textContent='둘러보기 중 · 여기서 켠 촛불은 이 기기에만 남아요';
-  $('#demoBar').hidden=false; $('#tourExit').hidden=false;
+  $('#tourExit').hidden=false;
   $('#fillDemoBtn').hidden=false; $('#resetDemoBtn').hidden=false;
   $('#logoutBtn').textContent='둘러보기 끝내기';
   enterMain();
 }
 function endTour(){
   DEMO=false; TOUR=false;
-  state.me=null; state.profiles={}; state.prayers=[];
-  $('#demoBar').hidden=true; $('#tourExit').hidden=true;
+  resetState();
+  $('#tourExit').hidden=true;
   $('#fillDemoBtn').hidden=true; $('#resetDemoBtn').hidden=true;
   $('#logoutBtn').textContent='로그아웃';
-  document.body.classList.remove('daylight'); lastCount=null;
   window.scrollTo(0,0); show('login');
 }
 
 /* ---------- 화면 전환 ---------- */
 async function enterMain(){
   if(!DEMO){ await loadAll(); subscribe(); }
-  show('main'); render();
-  requestAnimationFrame(scrollToNext);
+  goHome();
 }
 
 function openNick(mode){
@@ -925,7 +1318,7 @@ $('#codeInput').addEventListener('input',validateNick);
 $('#nickInput').addEventListener('keydown',e=>{ if(e.key==='Enter' && !$('#nickSubmit').disabled) submitNick(); });
 $('#codeInput').addEventListener('keydown',e=>{ if(e.key==='Enter' && !$('#nickSubmit').disabled) submitNick(); });
 $('#nickSubmit').addEventListener('click',submitNick);
-$('#nickCancel').addEventListener('click',()=>show('main'));
+$('#nickCancel').addEventListener('click',goHome);
 // 실수로 누르지 않도록 한 번 더 확인
 function askConfirm(isLast){
   return new Promise(resolve=>{
@@ -950,7 +1343,37 @@ $('#grid').addEventListener('click',async e=>{
   if(await askConfirm(Number(b.dataset.slot)===GOAL)) lightCandle(b);
 });
 
-$('#menuBtn').addEventListener('click',()=>{ $('#sheetWho').textContent=TOUR?'둘러보기 중이에요 (예시 기록)':`${state.me?.nickname||''}님으로 로그인 중`; $('#sheet').hidden=false; });
+// 회차
+$('#newRoundBtn').addEventListener('click',openRoundSheet);
+$('#rsNo').addEventListener('click',closeRoundSheet);
+$('#roundSheet').addEventListener('click',e=>{ if(e.target.id==='roundSheet') closeRoundSheet(); });
+$('#rsYes').addEventListener('click',async ()=>{
+  const b=$('#rsYes'); if(b.disabled) return; b.disabled=true;
+  try{
+    const row=await startRound();
+    closeRoundSheet(); show('main'); render(); window.scrollTo(0,0);
+    toast(`${row.number}회차를 시작했어요 🕯️`);
+  }catch(e){
+    closeRoundSheet();
+    const m=String(e?.message||e);
+    // 다른 가족이 먼저 시작한 경우: 새로고침하면 그 회차로 넘어가며 안내가 떠요
+    if(!m.includes('round_in_progress')) toast('시작하지 못했어요. 잠시 후 다시 눌러 주세요');
+    if(DEMO) syncView(); else await refresh();
+  }
+});
+$('#reviewBtn').addEventListener('click',()=>openRecord(cur()?.id,'done'));
+$('#histBtn').addEventListener('click',openHistory);
+$('#histBack').addEventListener('click',goHome);
+$('#recBack').addEventListener('click',()=> state.recordFrom==='done' ? goHome() : openHistory());
+$('#cards').addEventListener('click',e=>{
+  const c=e.target.closest('.rcard'); if(!c) return;
+  const r=state.rounds.find(x=>String(x.id)===c.dataset.round); if(!r) return;
+  if(!r.completed_on) goHome(); else openRecord(r.id,'history');
+});
+
+function openMenu(){ $('#sheetWho').textContent=TOUR?'둘러보기 중이에요 (예시 기록)':`${state.me?.nickname||''}님으로 로그인 중`; $('#sheet').hidden=false; }
+$('#menuBtn').addEventListener('click',openMenu);
+$('#doneMenuBtn').addEventListener('click',openMenu);
 $('#closeSheet').addEventListener('click',()=>$('#sheet').hidden=true);
 $('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet') $('#sheet').hidden=true; });
 $('#renameBtn').addEventListener('click',()=>{ $('#sheet').hidden=true; openNick('edit'); });
@@ -961,21 +1384,24 @@ $('#logoutBtn').addEventListener('click',async ()=>{
   else await state.sb.auth.signOut();
 });
 $('#fillDemoBtn').addEventListener('click',()=>{
-  // 마지막 칸을 바로 볼 수 있게 99번까지 채움 (하루 5~6개씩, 어제까지)
+  // 마지막 칸을 바로 볼 수 있게 현재 회차를 99번까지 채움 (하루 5~6개씩, 어제까지 · 회차 시작일 이전으로는 안 감)
   $('#sheet').hidden=true;
+  const r=cur();
+  if(!r || r.completed_on) return toast(`먼저 새로운 ${GOAL}번을 시작해 주세요`);
   const ids=Object.keys(state.profiles), perDay=ids.length;
   state.prayers=[];
   for(let s=1;s<GOAL;s++){
-    state.prayers.push({id:'d'+s,slot:s,user_id:ids[(s-1)%ids.length],prayed_on:addDays(todayKST(),-Math.ceil((GOAL-s)/perDay))});
+    const d=addDays(todayKST(),-Math.ceil((GOAL-s)/perDay));
+    state.prayers.push({id:'d'+r.id+'-'+s,round_id:r.id,slot:s,user_id:ids[(s-1)%ids.length],prayed_on:d<r.started_on?r.started_on:d});
   }
-  demoWrite(); render(); requestAnimationFrame(scrollToNext);
+  lastCount=null; demoWrite(); goHome();
 });
 $('#resetDemoBtn').addEventListener('click',()=>{
   try{ localStorage.removeItem(demoKey()); }catch{}
   $('#sheet').hidden=true;
-  if(TOUR){ state.me=null; return startTour(); }
-  const d=demoSeed();
-  state.me=null; state.profiles=d.profiles; state.prayers=d.prayers; $('#nickInput').value=''; show('login');
+  resetState();
+  if(TOUR) return startTour();
+  demoLoad(demoSeed()); $('#nickInput').value=''; show('login');
 });
 
 $('#tourBtn').addEventListener('click',startTour);
@@ -993,7 +1419,8 @@ if(/KAKAOTALK/i.test(navigator.userAgent)){
 let lastDay=todayKST();
 setInterval(()=>{
   const d=todayKST(); if(d===lastDay) return; lastDay=d;
-  if(!$('#main').hidden){ DEMO ? render() : refresh(); }
+  if(!state.me || !['main','done','history'].includes(state.view)) return;
+  if(DEMO) syncView(); else refresh();
 },60e3);
 
 /* ---------- 시작 ---------- */

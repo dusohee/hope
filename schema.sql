@@ -11,13 +11,26 @@ create table public.profiles (
   created_at  timestamptz not null default now()
 );
 
+-- 회차: 100개를 채우면 그 회차가 완성되고, 가족 누구나 다음 회차를 시작할 수 있어요
+create table public.rounds (
+  id            bigint generated always as identity primary key,
+  number        int  not null unique,                                   -- 1, 2, 3 ...
+  started_on    date not null,                                          -- 한국 날짜
+  completed_on  date,                                                   -- null = 진행 중
+  started_by    uuid references public.profiles(id) on delete set null
+);
+create unique index one_active_round on public.rounds ((true)) where completed_on is null;   -- 진행 중인 회차는 항상 1개
+insert into public.rounds (number, started_on) values (1, (now() at time zone 'Asia/Seoul')::date);
+
 create table public.prayers (
   id          bigint generated always as identity primary key,
-  slot        int  not null unique check (slot between 1 and 100),   -- 몇 번째 촛불인지
+  round_id    bigint not null references public.rounds(id),
+  slot        int  not null check (slot between 1 and 100),         -- 회차 안에서 몇 번째 촛불인지
   user_id     uuid not null references public.profiles(id) on delete cascade,
   prayed_on   date not null,                                        -- 한국 날짜
   created_at  timestamptz not null default now(),
-  unique (user_id, prayed_on)                                       -- 1인 하루 1회
+  constraint prayers_round_slot_key unique (round_id, slot),
+  unique (user_id, prayed_on)                                       -- 1인 하루 1회 (회차 상관없이)
 );
 
 -- 가족 코드: 이 코드를 아는 사람만 가입할 수 있어요
@@ -39,6 +52,7 @@ $$;
 -- 3) RLS: 가족만 읽기, 쓰기는 함수로만 ------------------------
 alter table public.profiles     enable row level security;
 alter table public.prayers      enable row level security;
+alter table public.rounds       enable row level security;
 alter table public.app_settings enable row level security;   -- 정책 없음 = 아무도 직접 못 읽음
 
 create policy "family reads profiles" on public.profiles
@@ -50,10 +64,14 @@ create policy "me updates my nickname" on public.profiles
 create policy "family reads prayers" on public.prayers
   for select to authenticated using (public.is_member());
 
+create policy "family reads rounds" on public.rounds
+  for select to authenticated using (public.is_member());
+
 -- 직접 수정은 닉네임 컬럼만 (id, created_at 은 못 바꾸게)
 revoke insert, update, delete on public.profiles from anon, authenticated;
 grant update (nickname) on public.profiles to authenticated;
 revoke insert, update, delete on public.prayers      from anon, authenticated;
+revoke insert, update, delete on public.rounds       from anon, authenticated;
 revoke all                    on public.app_settings from anon, authenticated;
 
 
@@ -73,11 +91,12 @@ begin
 end $$;
 
 
--- 5) 촛불 켜기: 다음 번호를 안전하게 배정 ---------------------
+-- 5) 촛불 켜기: 진행 중인 회차 안에서 다음 번호 ---------------
 create or replace function public.light_candle()
 returns public.prayers language plpgsql security definer set search_path = public as $$
 declare
   v_today date := (now() at time zone 'Asia/Seoul')::date;
+  v_round rounds;
   v_count int;
   v_row   prayers;
 begin
@@ -86,15 +105,48 @@ begin
   -- 두 사람이 동시에 눌러도 번호가 겹치지 않게 잠금
   lock table prayers in share row exclusive mode;
 
+  -- 하루 1번은 회차와 상관없이
   if exists (select 1 from prayers where user_id = auth.uid() and prayed_on = v_today) then
     raise exception 'already_today';
   end if;
 
-  select count(*) into v_count from prayers;
+  select * into v_round from rounds where completed_on is null for update;
+  if not found then raise exception 'completed'; end if;
+
+  select count(*) into v_count from prayers where round_id = v_round.id;
   if v_count >= 100 then raise exception 'completed'; end if;
 
-  insert into prayers (slot, user_id, prayed_on)
-  values (v_count + 1, auth.uid(), v_today)
+  insert into prayers (round_id, slot, user_id, prayed_on)
+  values (v_round.id, v_count + 1, auth.uid(), v_today)
+  returning * into v_row;
+
+  -- 100번째를 넣는 순간 회차 완성
+  if v_count + 1 >= 100 then
+    update rounds set completed_on = v_today where id = v_round.id;
+  end if;
+
+  return v_row;
+end $$;
+
+-- 6) 새 회차 시작: 진행 중인 회차가 없을 때만 ----------------
+create or replace function public.start_round()
+returns public.rounds language plpgsql security definer set search_path = public as $$
+declare
+  v_row rounds;
+begin
+  if not public.is_member() then raise exception 'not_member'; end if;
+
+  -- 두 사람이 동시에 눌러도 회차는 1개만 생기게 잠금
+  lock table rounds in exclusive mode;
+
+  if exists (select 1 from rounds where completed_on is null) then
+    raise exception 'round_in_progress';
+  end if;
+
+  insert into rounds (number, started_on, started_by)
+  values (coalesce((select max(number) from rounds), 0) + 1,
+          (now() at time zone 'Asia/Seoul')::date,
+          auth.uid())
   returning * into v_row;
 
   return v_row;
@@ -103,14 +155,17 @@ end $$;
 revoke all on function public.is_member()             from public, anon;
 revoke all on function public.join_family(text, text) from public, anon;
 revoke all on function public.light_candle()          from public, anon;
+revoke all on function public.start_round()           from public, anon;
 grant execute on function public.is_member()             to authenticated;
 grant execute on function public.join_family(text, text) to authenticated;
 grant execute on function public.light_candle()          to authenticated;
+grant execute on function public.start_round()           to authenticated;
 
 
--- 6) 실시간 동기화 -------------------------------------------
-alter publication supabase_realtime add table public.prayers, public.profiles;
+-- 7) 실시간 동기화 -------------------------------------------
+alter publication supabase_realtime add table public.prayers, public.profiles, public.rounds;
 
 
--- (참고) 다시 처음부터 시작하고 싶을 때:
--- truncate public.prayers restart identity;
+-- (참고) 모든 회차를 지우고 처음부터 시작하고 싶을 때:
+-- truncate public.prayers, public.rounds restart identity;
+-- insert into public.rounds (number, started_on) values (1, (now() at time zone 'Asia/Seoul')::date);

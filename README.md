@@ -1,6 +1,7 @@
 # 100번 새벽기도
 
 가족 6명이 새벽기도를 마칠 때마다 촛불을 하나씩 켜서, 함께 100개를 채우는 모바일 웹앱.
+100개를 다 채운 판은 **회차**(1회차, 2회차 …)로 보관하고, 새 100번을 이어서 시작할 수 있다.
 
 ---
 
@@ -15,6 +16,8 @@
 ### 화면 흐름
 ```
 카카오 로그인 → (첫 로그인만) 닉네임 + 가족 코드 입력 → 촛불 채우기 페이지
+                                                    ├ 100번째가 켜지면 → 100번 완성 화면 → 새로운 100번 시작 → 촛불 채우기 (다음 회차)
+                                                    └ 지난 기록 → N회차 기록 보기
 ```
 - 이미 가입한 사람은 로그인 후 바로 촛불 채우기 페이지로
 - 로그인 상태는 유지 (다음에 열면 바로 메인)
@@ -33,19 +36,41 @@
 - 메뉴에서 "이름 바꾸기"로 다시 진입 가능 (이때는 코드 입력 없음)
 
 **③ 촛불 채우기 (메인)**
-- 상단 고정 헤더: 제목, 진행 수(예: 37 / 100), 진행 바, 가족별 이름 칩(켠 횟수 + 오늘 켰으면 노란 점)
+- 상단 고정 헤더: 제목(2회차부터 옆에 `2회차` 라벨), 진행 바 + 진행 수(예: 37 / 100), 가족별 이름 칩(켠 횟수 + 오늘 켰으면 노란 점). 진행 수·바·칩은 **현재 회차 기준**, 노란 점은 회차 상관없이 오늘 켰는지
+- 헤더 오른쪽 **지난 기록 N** 버튼 (완성된 회차 수, 0이면 숨김) + 메뉴(⋯)
 - 본문: **3열 × n행 격자**에 촛불 100개. 각 칸은 별이 있는 밤하늘 배경 + 물에 비친 반사
 - **꺼진 촛불**: 색이 없는 회색, 낮은 opacity, 불꽃 없이 심지만. 아래에 번호
 - **다음 차례 촛불**: 살짝 밝게 숨쉬는 효과 + "기도 켜기" 버튼
 - **켜진 촛불**: 참고 이미지처럼 그라데이션 색이 번지고 흰 불꽃이 흔들림. 아래에 **날짜(예: 9.28 (월))와 켠 사람 이름**
 - 켜는 순간: 불꽃이 올라오고 빛이 퍼지는 애니메이션 + 짧은 진동
 - **100번째 촛불**: 격자 3칸을 모두 차지하는 넓은 칸. 파스텔 촛불 여러 개가 모여 있고(촛농이 흘러내리고 불꽃 뒤로 둥근 빛), 위에 큰 "100"과 성경말씀(이사야 60:1). 켜기 전에는 회색 촛불과 흐린 "100"만 보이고, 켜면 촛불이 하나씩 차례로 켜진 뒤 말씀이 나타남
-- **100개 완성 시**: 헤더에 완성 메시지. 다 켜진 촛불을 밤에 3초간 보여준 뒤, 모든 격자 배경이 천천히 **화창한 낮 하늘**(파란 하늘 + 구름, 100번 칸엔 해)로 바뀜
+- **100개 완성 시**: 헤더에 완성 메시지. 다 켜진 촛불을 밤에 3초간 보여준 뒤, 모든 격자 배경이 천천히 **화창한 낮 하늘**(파란 하늘 + 구름, 100번 칸엔 해)로 바뀌고, 잠시 뒤 ④ 완성 화면으로 넘어감
+
+**④ 100번 완성** (현재 회차가 완성됐고 다음 회차가 아직 없을 때 메인 대신 표시)
+- 상단: 100번째 칸 디자인(큰 "100" + 촛불 스카이라인 + 물 반사)을 크게, 촛불이 하나씩 켜지며 "100"은 따뜻한 빛이 번지는 흰색
+- `N회차 완성` 배지 + "100번째 촛불 · 11.23 (월) 엄마", 제목 "100번의 새벽기도를 함께 채웠어요", 기간 "2026.10.26 – 11.23 · 29일 동안"
+- 가족별 켠 횟수 막대 (많은 순)
+- **새로운 100번 시작하기** → ⑤ / **N회차 기록 다시 보기** → ⑦
+
+**⑤ 새 회차 시작 확인** (바텀시트)
+- "2회차를 시작할까요?" + 보관 안내 + "오늘 이미 촛불을 켠 사람은 2회차 첫 촛불을 내일부터 켤 수 있어요." 안내 박스
+- **2회차 시작하기** / 취소. 누군가 시작하면 다른 가족 화면도 실시간으로 새 회차 메인으로 바뀌고 "○○님이 2회차를 시작했어요" 토스트
+
+**⑥ 지난 기록**
+- 회차 카드를 최신순으로. 왼쪽은 100칸을 10×10 점으로 줄인 썸네일(켜진 칸은 팔레트색), 오른쪽은 `진행 중`/`완성` 배지, N회차, 기간, 며칠 · 가족 수
+- 진행 중 카드(점선 테두리)는 누르면 메인으로, 완성 카드는 ⑦로
+
+**⑦ N회차 기록 보기** (읽기 전용)
+- "N회차 기록" + `완성` 배지, 기간 요약, 가족별 횟수 칩
+- 메인과 같은 3열 격자에 100개 모두 켜진 상태로 날짜 · 이름 표시. 버튼 없음
 
 ### 규칙
 - 가족 전체가 **하나의 100칸**을 함께 채운다 (개인별 100칸 아님)
+- 100개를 채우면 그 판이 **N회차 완성**. 기록은 지우지 않고 보관
+- 가족 누구나 "새로운 100번 시작하기"를 누를 수 있고, 누르면 가족 전체에 다음 회차가 시작된다. 진행 중인 회차는 항상 1개 (두 명이 동시에 눌러도 하나만 생김)
+- 촛불 색(팔레트)은 모든 회차 동일
 - 촛불은 **1번부터 차례로** 켜진다 (칸을 골라서 켜지 않음)
-- 한 사람은 **하루 1번**만 켤 수 있다. 날짜는 한국 시간 기준, 자정에 바뀜
+- 한 사람은 **하루 1번**만 켤 수 있다 — **회차와 상관없이**. 오늘 1회차 100번째를 켠 사람은 2회차 첫 촛불을 내일부터. 날짜는 한국 시간 기준, 자정에 바뀜
 - 오늘 이미 켰으면 버튼이 "오늘은 켰어요"로 비활성화 (앱을 켜둔 채 자정이 지나면 자동으로 풀림)
 - 누군가 켜면 **다른 가족 화면에도 실시간으로** 불이 들어오고 "○○님이 촛불을 켰어요" 토스트
 - 앱을 백그라운드에서 다시 열면 최신 상태로 새로고침
@@ -76,14 +101,15 @@
 - **백엔드**: Supabase — Auth, Postgres, Realtime, Edge Function(`kakao-token`)
 - **카카오 로그인**: 이메일 동의 없이 동작하도록 OpenID Connect 사용. 앱 → 카카오 인가 화면 → 돌아온 code를 Edge Function이 Client Secret으로 ID 토큰과 교환 → `signInWithIdToken`으로 Supabase 로그인 (Supabase 기본 카카오 OAuth는 이메일 권한을 항상 요청해서 비즈 앱 심사 없이 못 씀)
 - **라이브러리**: `@supabase/supabase-js@2` (CDN UMD)
-- **데모 모드**: `CONFIG`가 비어 있으면 localStorage로 이 기기에서만 동작. 예시 가족 5명 기록이 들어가 있고 하루 1회 제한 없음. 메뉴의 "데모: 99번까지 채워 보기"로 마지막 칸을 바로 확인 가능
+- **데모 모드**: `CONFIG`가 비어 있으면 localStorage로 이 기기에서만 동작(회차 포함). 예시 가족 5명 기록이 들어가 있고 하루 1회 제한 없음. 메뉴의 "데모: 99번까지 채워 보기"로 현재 회차의 마지막 칸 → 완성 화면 → 새 회차 흐름을 바로 확인 가능
   - 설정값을 넣었는데 CDN을 못 불러오면 데모로 빠지지 않고 "서버 연결 도구를 불러오지 못했어요" 안내
 
 ### 파일
 ```
 hope/
 ├── index.html             앱 전체 (화면, 로그인, 동기화, 데모 모드)
-├── schema.sql             Supabase 테이블 · RLS · 함수 · Realtime
+├── schema.sql             Supabase 테이블 · RLS · 함수 · Realtime (새로 설치할 때)
+├── migrations/002_rounds.sql   회차 기능 이전부터 쓰던 DB에 한 번 실행 (기존 기록 → 1회차)
 ├── supabase/functions/kakao-token/index.ts   카카오 code → ID 토큰 교환 (Client Secret 보관)
 ├── manifest.webmanifest   홈 화면에 추가할 때 앱 이름 · 아이콘
 ├── apple-touch-icon.png   iPhone 홈 화면 아이콘 (180)
@@ -96,21 +122,26 @@ hope/
 | 테이블 | 내용 |
 |---|---|
 | `profiles` | id(auth.users), nickname |
-| `prayers` | slot(1~100, unique), user_id, prayed_on(한국 날짜), unique(user_id, prayed_on) |
+| `rounds` | number(1, 2, 3 …, unique), started_on, completed_on(null = 진행 중), started_by. 진행 중은 항상 1개(부분 unique 인덱스 `one_active_round`) |
+| `prayers` | round_id, slot(1~100), user_id, prayed_on(한국 날짜). unique(round_id, slot), unique(user_id, prayed_on) → 하루 1번은 회차 상관없이 |
 | `app_settings` | family_code (1행, 클라이언트에서 직접 못 읽음) |
 
 ### 서버 함수 (RPC)
 - `join_family(p_nickname, p_code)` — 가족 코드 확인 후 profile 생성
-- `light_candle()` — 테이블 잠금 후 다음 slot 배정. 에러: `already_today`, `completed`, `not_member`
-- `is_member()` — RLS용. 가입한 사람만 profiles/prayers 읽기 가능
+- `light_candle()` — 테이블 잠금 후 진행 중인 회차 안에서 다음 slot 배정. 100번째를 넣는 순간 그 회차 `completed_on = 오늘`. 에러: `already_today`, `completed`(진행 중인 회차 없음), `not_member`
+- `start_round()` — 테이블 잠금 후 다음 번호 회차 생성(시작일 = 한국 오늘, started_by = 나). 에러: `round_in_progress`(이미 진행 중인 회차 있음), `not_member`
+- `is_member()` — RLS용. 가입한 사람만 profiles/prayers/rounds 읽기 가능
 - 쓰기는 RPC로만. 직접 수정은 본인 row의 `nickname` 컬럼만 허용 (컬럼 단위 grant)
 
 ### index.html 주요 함수
 - `initReal()` / `initDemo()` — 모드별 시작
 - `afterAuth()` — profile 있으면 메인, 없으면 닉네임 화면 (조회 실패 시엔 닉네임 화면으로 보내지 않음)
-- `render()` — 격자·헤더·칩 상태 갱신
+- `render()` — 메인 격자·헤더·칩 상태 갱신 (현재 회차 = `state.rounds`의 마지막)
+- `goHome()` — 현재 회차가 완성이면 완성 화면(`showDone()`), 아니면 메인
+- `startRound()` → `realStartRound()`(RPC) 또는 `demoStartRound()`, 결과는 `applyNewRound()`로 반영
+- `openHistory()` / `openRecord()` — 지난 기록 목록 / 회차 기록 보기. 지난 회차 촛불은 `ensureArchive()`가 처음 열 때 불러와서 `state.archive`에 보관
 - `lightCandle()` → `realLight()`(RPC) 또는 `demoLight()`
-- `subscribe()` — prayers INSERT, profiles 변경 실시간 구독
+- `subscribe()` — prayers INSERT, rounds INSERT/UPDATE, profiles 변경 실시간 구독
 - `ignite(slot)` — 켜지는 애니메이션
 
 ---
@@ -119,8 +150,11 @@ hope/
 
 ### 3-1. Supabase
 1. https://supabase.com 새 프로젝트 (Region: Seoul)
-2. SQL Editor에 `schema.sql` 실행. SQL Editor에 붙여넣은 뒤 `'CHANGE_ME'`를 실제 가족 코드로 바꿔서 실행 (**파일에는 저장하지 않기** — 공개 저장소라서). 안 바꾸면 아무도 가입할 수 없음
+2. SQL Editor에 `schema.sql` 실행 (1회차가 함께 만들어짐). SQL Editor에 붙여넣은 뒤 `'CHANGE_ME'`를 실제 가족 코드로 바꿔서 실행 (**파일에는 저장하지 않기** — 공개 저장소라서). 안 바꾸면 아무도 가입할 수 없음
 3. Project Settings → API에서 `Project URL`, `anon public` 키 복사
+
+### 3-1-1. 회차 기능 전부터 쓰던 DB라면
+SQL Editor에 `migrations/002_rounds.sql`을 한 번 실행. 기존 촛불은 모두 1회차로 옮겨지고, 100개가 차 있으면 1회차는 완성 상태가 됨. **앱(index.html)을 배포하기 전에 먼저 실행** — 새 앱은 `rounds` 테이블이 없으면 열리지 않음 (반대로 마이그레이션 후에도 예전 앱은 2회차를 시작하기 전까지는 그대로 동작)
 
 ### 3-2. 카카오 (developers.kakao.com)
 1. 애플리케이션 추가
@@ -161,11 +195,11 @@ GitHub Pages (`dusohee/hope`, main 브랜치 루트) → https://dusohee.github.
 ---
 
 ## 4. 자주 바꿀 것
-- 목표 개수: `CONFIG.GOAL` + `schema.sql`의 `100` (check 제약, `light_candle`) 함께 수정
+- 목표 개수: `CONFIG.GOAL` + `schema.sql`의 `100` (check 제약, `light_candle` 두 군데) 함께 수정
 - 촛불 색: `PALETTE` (100번째 칸은 `FINALE_PALETTE`, 배치는 `FINALE_CANDLES`)
 - 100번째 칸 말씀: `VERSE` (줄 단위 배열 + 출처)
 - 가족 코드 변경: `update public.app_settings set family_code = '새코드' where id = 1;`
-- 처음부터 다시: `truncate public.prayers restart identity;`
+- 모든 회차를 지우고 처음부터: `truncate public.prayers, public.rounds restart identity;` 후 `insert into public.rounds (number, started_on) values (1, (now() at time zone 'Asia/Seoul')::date);`
 
 ---
 
@@ -177,4 +211,5 @@ GitHub Pages (`dusohee/hope`, main 브랜치 루트) → https://dusohee.github.
 | 로그인 후 "카카오 로그인에 실패했어요" | OpenID Connect가 OFF이거나(ID 토큰 없음) Edge Function 시크릿(`KAKAO_CLIENT_SECRET`)이 틀린 경우. Dashboard → Edge Functions → kakao-token → Logs 확인 |
 | **KOE006** (등록되지 않은 Redirect URI) | REST API 키 상세의 "카카오 로그인 리다이렉트 URI"에 `https://dusohee.github.io/hope/`가 끝의 `/`까지 정확히 있는지 확인 |
 | iPhone 홈 화면 앱에서 로그인 후 Safari로 튕김 | iOS 홈 화면 앱은 Safari와 저장소가 분리돼 있어요. 홈 화면 앱 **안에서** 카카오 로그인을 한 번 더 해 주세요. 계속 튕기면 `index.html`의 `apple-mobile-web-app-capable` 줄을 지워 Safari 탭으로 열리게 하면 확실해요 |
-| 다른 가족이 켠 촛불이 바로 안 보임 | `schema.sql` 6번(Realtime publication)이 실행됐는지 확인. 앱을 닫았다 열면 어쨌든 최신으로 맞춰져요 |
+| 다른 가족이 켠 촛불이나 새 회차가 바로 안 보임 | `schema.sql` 7번(Realtime publication, `rounds` 포함)이 실행됐는지 확인. 앱을 닫았다 열면 어쨌든 최신으로 맞춰져요 |
+| 로그인 후 "서버에 연결하지 못했어요" (회차 기능 배포 직후) | `migrations/002_rounds.sql`을 아직 실행하지 않아 `rounds` 테이블이 없는 경우. 3-1-1 참고 |
